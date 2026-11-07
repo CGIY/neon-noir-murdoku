@@ -163,15 +163,66 @@
     color: var(--ink);
     background-color: var(--floor);
     background-image: var(--grain);
+    background-size: var(--grain-size, auto);
+    background-position: var(--floor-x, 0px) var(--floor-y, 0px);
     box-shadow: inset -1px -1px #10162433;
     -webkit-tap-highlight-color: transparent;
   }
   .floor-0 { --floor: #94e3d1; --grain: repeating-linear-gradient(135deg, transparent 0 7px, #10494b18 7px 8px); }
-  .floor-1 { --floor: #cdbdf7; --grain: radial-gradient(#33144e33 1px, transparent 1px); background-size: 6px 6px; }
+  .floor-1 { --floor: #cdbdf7; --grain: radial-gradient(#33144e33 1px, transparent 1px); --grain-size: 6px 6px; }
   .floor-2 { --floor: #ffd786; --grain: repeating-linear-gradient(0deg, transparent 0 8px, #8c4a261d 8px 9px); }
   .floor-3 { --floor: #ffb5ac; --grain: repeating-linear-gradient(90deg, transparent 0 8px, #8c323018 8px 9px); }
   .floor-4 { --floor: #accbff; --grain: repeating-linear-gradient(45deg, transparent 0 10px, #233d7c26 10px 11px); }
-  .floor-5 { --floor: #d0e891; --grain: radial-gradient(#41491438 1px, transparent 1px); background-size: 8px 8px; }
+  .floor-5 { --floor: #d0e891; --grain: radial-gradient(#41491438 1px, transparent 1px); --grain-size: 8px 8px; }
+  /* These marks are printed into the floor, below the map's objects and walls. */
+  .material-circuit {
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23132949' opacity='.23'%3E%3Cpath d='M0 9h12l9 9h27M0 33h18l9-9h11l9 9h1M7 0v8m27 40v-8l-7-7v-8M13 40h8l7 8'/%3E%3Ccircle cx='7' cy='10' r='2'/%3E%3Ccircle cx='11' cy='40' r='2'/%3E%3C/g%3E%3C/svg%3E");
+    --grain-size: 48px 48px;
+  }
+  .material-tile {
+    --grain: linear-gradient(#172c461f 1px, transparent 1px), linear-gradient(90deg, #172c461f 1px, transparent 1px), conic-gradient(#fff3 0 25%, transparent 25% 50%, #fff3 50% 75%, transparent 75%);
+    --grain-size: 13px 13px, 13px 13px, 26px 26px;
+  }
+  .material-steel {
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Cpath d='M2 6l4-4m2 10 4-4m2 10 4-4m2 10 4-4M2 20l4-4m10 14 4-4m2-18 4-4' stroke='%23233147' opacity='.19' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+    --grain-size: 25px 25px;
+  }
+  .material-rails {
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M7 0v32m18-32v32' stroke='%231f304d' stroke-width='2' opacity='.19'/%3E%3Cpath d='M4 6h24M4 17h24M4 28h24' stroke='%231f304d' opacity='.16'/%3E%3C/svg%3E");
+    --grain-size: 32px 32px;
+  }
+  .material-hazard {
+    --grain: repeating-linear-gradient(135deg, transparent 0 8px, #25344d17 8px 13px, #fff2 13px 14px, transparent 14px 20px);
+    --grain-size: 56.57px 56.57px;
+  }
+  .material-terrazzo {
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 42 38'%3E%3Cg fill='%23333559' opacity='.19'%3E%3Cpath d='M5 5h4L7 8zM25 7l4 2-2 2zM15 19l4 1-1 3-4-1zM37 18l2 2-3 2zM4 28l3 1-1 3-3-1zM25 31l3-2 1 4z'/%3E%3C/g%3E%3Cpath d='M11 12h3m15 4h3M33 31h3m-22 3h2' stroke='%23ffffff' opacity='.65' stroke-width='1.5'/%3E%3C/svg%3E");
+    --grain-size: 42px 38px;
+  }
+  .material-velvet {
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0l12 12-12 12L0 12z' fill='%234d275d' fill-opacity='.045' stroke='%234d275d' stroke-opacity='.17'/%3E%3Ccircle cx='12' cy='12' r='1' fill='%234d275d' opacity='.17'/%3E%3C/svg%3E");
+    --grain-size: 24px 24px;
+  }
+  .material-plank {
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 28'%3E%3Cpath d='M0 .5h56M0 14.5h56M19 0v14m24 0v14' fill='none' stroke='%2345253a' opacity='.22'/%3E%3Cpath d='M3 5h9m15 4h19M4 21h15m27 3h6' stroke='%2345253a' opacity='.11'/%3E%3C/svg%3E");
+    --grain-size: 56px 28px;
+  }
+  .material-acoustic {
+    --grain: radial-gradient(circle at 2px 2px, #17263d3a 0 1px, transparent 1.6px);
+    --grain-size: 8px 8px;
+  }
+  .material-canopy {
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M7 0v32m18-32v32M7 10l7-5m11 17 6-4M7 23l6 5m12-17-6-5' stroke='%231a4e47' fill='none' opacity='.21'/%3E%3Cpath d='M3 0v32m18-32v32' stroke='%23ffffff' fill='none' opacity='.33'/%3E%3C/svg%3E");
+    --grain-size: 32px 32px;
+  }
+  .material-asphalt {
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 32'%3E%3Cpath d='M3 16h20m10 0h9' stroke='%232b4059' opacity='.19' stroke-width='2'/%3E%3Cpath d='M4 4h2m9 5h2m15-4h2m7 4h2M8 25h2m13 2h2m15-4h2' stroke='%232b4059' opacity='.15'/%3E%3C/svg%3E");
+    --grain-size: 48px 32px;
+  }
+  .material-hex {
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 32'%3E%3Cpath d='M9 0h9l9 16-9 16H9L0 16zM27 16h9M27-16 18 0m9 48-9-16' fill='none' stroke='%231d3356' opacity='.2'/%3E%3C/svg%3E");
+    --grain-size: 28px 25px;
+  }
   .cell::after {
     content: "";
     position: absolute;
@@ -333,7 +384,7 @@
     color: var(--ink);
     font: 950 .62rem/1 ui-monospace, monospace;
   }
-  .portrait svg { width: 100%; height: 100%; }
+  .portrait svg { width: 100%; height: 100%; border-radius: inherit; }
   .person-name {
     max-width: 100%;
     padding: 0 1px;
@@ -363,7 +414,7 @@
     background: #ecff9a;
     font: 950 .57rem/1 system-ui, sans-serif;
   }
-  .person.victim .portrait { border-style: dashed; }
+  .person.victim .portrait, .portrait.victim-portrait { border-style: dashed; }
   .clue {
     grid-area: clue;
     min-width: 0;
@@ -386,6 +437,8 @@
     min-height: 24px;
     background: linear-gradient(90deg, #59637742 50%, transparent 50%) 0 100% / 6px 1px repeat-x;
   }
+  .clue-identity { min-width: 0; display: flex; align-items: center; gap: 6px; }
+  .clue-identity .portrait { flex: 0 0 auto; }
   .clue-title { font-weight: 900; font-size: .77rem; }
   .clue-title .technical { font-size: .57rem; color: #465066; }
   .clue-content { display: flex; align-items: flex-start; gap: 6px; }
@@ -690,7 +743,10 @@
   <div class="roster" id="roster" role="group" aria-label="Personnages à placer"></div>
   <section class="clue" aria-label="Indice du personnage sélectionné">
     <div class="clue-header">
-      <div class="clue-title"><span id="clue-name"></span> <span class="technical" id="clue-state"></span></div>
+      <div class="clue-identity">
+        <span class="portrait" id="clue-portrait" aria-hidden="true"></span>
+        <div class="clue-title"><span id="clue-name"></span> <span class="technical" id="clue-state"></span></div>
+      </div>
       <button type="button" class="remove" id="remove">Retirer</button>
     </div>
     <div class="clue-content">
@@ -825,16 +881,217 @@ const objectTypes = {
     art: '<circle cx="20" cy="21" r="15" fill="#936969"/><circle cx="20" cy="19" r="14" fill="#f2ca94"/><path d="m13 15 4 4-4 4-4-4z" fill="#e591a6"/><circle cx="25" cy="19" r="3" fill="#addfed"/>'
   }
 };
+const caseMaterials = {
+  "01": { A: "circuit", B: "acoustic", C: "tile", D: "plank", E: "velvet" },
+  "02": { A: "circuit", B: "rails", C: "terrazzo", D: "steel", E: "hazard" },
+  "03": { A: "terrazzo", B: "circuit", C: "hex", D: "tile", E: "tile", F: "plank" },
+  "04": { A: "hazard", B: "steel", C: "circuit", D: "rails", E: "terrazzo" },
+  "05": { A: "circuit", B: "hex", C: "rails", D: "hazard", E: "steel", F: "steel" },
+  "06": { A: "plank", B: "steel", C: "circuit", D: "rails", E: "hazard", F: "acoustic" },
+  "07": { A: "plank", B: "asphalt", C: "steel", D: "rails", E: "hazard" },
+  "08": { A: "terrazzo", B: "velvet", C: "plank", D: "tile", E: "velvet" },
+  "09": { A: "terrazzo", B: "velvet", C: "plank", D: "tile", E: "steel" },
+  "10": { A: "terrazzo", B: "plank", C: "velvet", D: "tile", E: "tile" },
+  "11": { A: "steel", B: "circuit", C: "hex", D: "rails", E: "hazard", F: "acoustic" },
+  "12": { A: "terrazzo", B: "acoustic", C: "circuit", D: "tile", E: "steel" },
+  "13": { A: "circuit", B: "hazard", C: "hex", D: "steel", E: "rails", F: "plank" },
+  "14": { A: "terrazzo", B: "circuit", C: "plank", D: "acoustic", E: "hex", F: "velvet" },
+  "15": { A: "terrazzo", B: "steel", C: "canopy", D: "plank", E: "velvet", F: "tile" },
+  "16": { A: "plank", B: "steel", C: "terrazzo", D: "rails", E: "hazard", F: "asphalt" },
+  "17": { A: "hazard", B: "circuit", C: "acoustic", D: "plank", E: "hex" },
+  "18": { A: "tile", B: "hex", C: "terrazzo", D: "steel", E: "asphalt", F: "velvet" },
+  "19": { A: "circuit", B: "steel", C: "hex", D: "steel", E: "hazard", F: "plank" },
+  "20": { A: "hazard", B: "steel", C: "circuit", D: "hex", E: "plank", F: "asphalt" },
+  "21": { A: "terrazzo", B: "plank", C: "tile", D: "steel", E: "velvet", F: "plank" },
+  "22": { A: "hazard", B: "canopy", C: "terrazzo", D: "steel", E: "tile", F: "acoustic" },
+  "23": { A: "tile", B: "asphalt", C: "steel", D: "hazard", E: "rails", F: "plank" },
+  "24": { A: "terrazzo", B: "tile", C: "circuit", D: "velvet", E: "hex", F: "asphalt" },
+  "25": { A: "terrazzo", B: "asphalt", C: "plank", D: "circuit", E: "hex", F: "hazard" }
+};
 const personColors = ["#9cf6e4", "#ffcb84", "#ffb2d9", "#beb7ff", "#f4ea83", "#b8ec94", "#a9d4ff", "#ff9c9b"];
-const portraitShapes = [
-  '<path d="M6 24v-4l4-3h8l4 3v4zM8 12V7l5-4 6 2 2 6-3 6h-8z" fill="#142537"/><path d="M9 10h10l-1 4H10z" fill="#92fff0"/>',
-  '<path d="M5 24v-3l5-4h8l5 4v3zM8 12V5l10-2 3 4-4 3v5l-4 3-4-4z" fill="#402740"/><path d="M11 11h7m-5 4h3" stroke="#ffd996" stroke-width="1.6"/>',
-  '<path d="M5 24v-4l4-3-2-5 2-6 5-3 6 3 2 6-3 5 4 3v4z" fill="#471e42"/><path d="M10 10l4-3 4 3v6h-8z" fill="#ffcae0"/><path d="M11 12h6" stroke="#471e42" stroke-width="1.7"/>',
-  '<path d="M5 24v-4l5-3h8l5 3v4zM8 9l3-5h6l4 5v6l-4 3h-6l-3-3z" fill="#2b2053"/><path d="M8 10h13v3H8z" fill="#e5e0ff"/><circle cx="17" cy="11.5" r="1.2" fill="#2b2053"/>',
-  '<path d="M5 24v-5l5-3h8l5 3v5zM8 9l4-5 7 2 1 6-3 5h-6l-3-4z" fill="#423a28"/><path d="M9 11h5m2 0h4" stroke="#fff4af" stroke-width="2"/><path d="M11 21h6" stroke="#fff4af" stroke-width="1.6"/>',
-  '<path d="M6 24v-4l4-3h8l4 3v4zM9 10V7l2-3 4 2 4-2 2 5-2 7-4 2-4-2z" fill="#263f3b"/><path d="M10 10l4 2 5-2-1 5h-7z" fill="#d2ffac"/>',
-  '<path d="M5 24v-4l5-3h8l5 3v4zM8 9l2-5 4 2 4-2 3 5-2 7-4 2-5-2z" fill="#243a59"/><path d="M10 11h9m-8 3h7" stroke="#b9eaff" stroke-width="1.6"/>'
-];
+const portraitMark = (() => {
+  const outline = "#181728";
+  const complexions = [
+    ["#ffcd9f", "#ce805d"], ["#d88b60", "#995139"],
+    ["#a86446", "#71392e"], ["#f2d5b8", "#c68772"],
+    ["#b9785d", "#854d41"], ["#e5a77f", "#ab664c"]
+  ];
+  const hairColors = [
+    ["#213c4c", "#54cbd1"], ["#301e2a", "#e05458"],
+    ["#382057", "#c6a5f5"], ["#1d2538", "#697f9e"],
+    ["#925a31", "#ffdd77"], ["#682f2a", "#f4a15a"],
+    ["#536582", "#f2f4f9"], ["#39263d", "#f263aa"],
+    ["#354245", "#9bc39a"], ["#713450", "#ffa9bf"]
+  ];
+  const wardrobes = [
+    ["#123e4e", "#5df5dc"], ["#572a3a", "#ffad59"],
+    ["#722957", "#ff84bf"], ["#2f2b5d", "#c3b4ff"],
+    ["#4a522c", "#ffef8e"], ["#224e3a", "#a5ed8f"],
+    ["#23446d", "#8fd5ff"], ["#51213c", "#ff83ac"],
+    ["#414253", "#91e1ed"], ["#65442d", "#f0be7c"]
+  ];
+  const faces = [
+    "M10 12Q10 6 18 6q8 0 8 6l-.6 7.2Q24.8 24.5 19 27h-2q-5.8-2.5-6.4-7.8z",
+    "M9.8 12Q10 6.2 18 6.2q8 0 8.2 5.8v7l-2.8 5.6L19.9 27h-3.8l-3.5-2.4-2.8-5.6z",
+    "M10 12Q10.2 6.2 18 6.2T26 12v7q-1.1 6.8-8 7.7Q11.1 25.8 10 19z",
+    "M9.5 11.8q.3-5.5 8.5-5.5t8.5 5.5l-.4 8.8-2.1 3.7-4 2.4h-4l-4-2.4-2.1-3.7z",
+    "M11 12q.3-6 7-6t7 6v7l-2 5.5-4 2.6h-2l-4-2.6-2-5.5z"
+  ];
+  const path = (shape, fill, extra = "") =>
+    '<path d="' + shape + '" fill="' + fill + '"' + extra + '/>';
+  const line = (shape, color, width = 1.2) =>
+    path(shape, "none", ' stroke="' + color + '" stroke-width="' + width + '"');
+  const dot = (x, y, radius, fill, border = "none") =>
+    '<circle cx="' + x + '" cy="' + y + '" r="' + radius + '" fill="' + fill + '" stroke="' + border + '"/>';
+  const inked = shape => ' stroke="' + outline + '" stroke-width="' + shape + '"';
+
+  const haircuts = [
+    { back: "M8 19 6 10l3-6 8-2 9 2 4 7-2 10-3 2-2-8-9-2-2 8z", front: "M7 16 6 9l4-5 8-2 9 3 2 6-5 3-1-5-9 6-4-1-1 4z", glint: "M10 8l7-3 7 2m-9 5 7-4" },
+    { back: "M9 16V9l4-4 4-3 7 1 3 5v8l-3 2-2-9h-8l-2 9z", front: "M9 14V9l4-3 2-4 4-1 5 2 2 4-4 4-7-2-2 3-1 4z", glint: "M16 6l4-3 3 2m-13 5 2-1" },
+    { back: "M8 12Q3 12 3.5 7.5 4 2 9.5 3L13 6h10l3.5-3Q32 2 32.5 7.5 33 12 28 12l.6 9-3 2-3-13h-9l-3 13-3-2z", front: "M7.5 14q-1-8 4.5-9l6 1 6-1q5.5 1 4.5 9l-3 1-1-5-6.5 2-6.5-2-1 5z", glint: "M6 6.5 9 5m18 0 3 1.5M10 9l5-2m6 0 5 2" },
+    { back: "M8 15V8l4-5 8-1 6 3 3 6-2 6-3-7H12l-1 7z", front: "M8 14V8l4-5 8-1 6 3 3 6-4 4-2-5-3-3-8 5-2 4z", glint: "M11 9l5-4 4-1 5 3m-8 2 4-3" },
+    { back: "M5 26 6 11q0-8 12-9 11 0 12 9l1 15-5 2-4-8h-8l-4 8z", front: "M7 16V10q2-7 11-8 8 0 11 7v7l-3 2-1-8-4 3-5-4-4 4-2-1-1 6z", glint: "M8 10q2-5 8-6m4 0 6 4m2 8v6" },
+    { back: "M5 12q-2-4 3-6 0-4 5-3 4-4 8 0 4-2 7 3 5 1 3 6 3 3-1 6 1 6-5 7l-3-5 1-8H13l-1 10-5 2-2-4 1-4z", front: "M6 15q-2-4 2-6 0-4 5-4 4-3 7 0 6-2 7 3 5 0 3 5l-4 3-2-5q-4 3-8-1-2 5-6 3l-1 4z", glint: "M8 10q3-3 5-1m1-3 4 1m4 0 3 2m2 4 1-2" },
+    { back: "M7 16 6 9 3 7l7-2 1-4 6 3 5-3 2 4 7 2-2 5 1 5-5 3-3-9h-8l-3 8z", front: "M8 14 6 9 3 7l7-2 1-4 6 3 5-3 2 4 7 2-2 5-5 1-4-5-4 4-4-2-2 6z", glint: "M9 7l4-1m6 1 3-3m2 4 3 1" },
+    { back: "M6 26 6.5 10q1-6.5 10.5-8 10.5.5 13 8l.5 16-6.5 2-2.5-10h-8l-2 10z", front: "M7 15 7.5 10Q9 4 17 2.5q8 .5 11 5.5l2 8-3 3-2-7-4-5-2 4-4-3-3 3-2 8z", glint: "M10 12l-1 10m5-14 3-3m7 4 3 9" },
+    { back: "M8 16v-5q1-5 4-7 5-4 11-1 5 1 6 8l-2 5-2-6H11l-1 7z", front: "M8 15v-4q1-5 4-7 5-4 11-1 5 1 6 8l-2 4-2-6-5-1-7 1-2 5z", glint: "M11 8l4-3 5-1 5 2m-1 4 2 2" },
+    { back: "M7 16 6 9 8 6l3-1 3-3 4 1 3-2 4 2 1 3 4 2-1 7-4 5-3-9h-8l-2 8z", front: "M7 15 6 9l2-3 3-1 3-3 4 1 3-2 4 2 1 3 4 2-1 5-4 1-2-5-4 2-3-3-4 5-2 2z", glint: "M9 9l3-3m2 1 3-2m4 0 3 3m1 1 3 1" }
+  ];
+
+  const gridclub = {
+    aiko: [0, 5, 0, 0, 4, 0, 0],
+    brix: [1, 2, 1, 1, 1, 1, 1],
+    coda: [2, 4, 2, 2, 0, 2, 2],
+    dax: [3, 3, 3, 3, 2, 3, 3],
+    emi: [4, 0, 4, 4, 3, 4, 4],
+    fox: [5, 1, 5, 5, 4, 5, 5],
+    gaku: [6, 2, 6, 6, 1, 2, 6],
+    nova: [7, 3, 7, 7, 0, 1, 7]
+  };
+
+  function fingerprint(value) {
+    let key = 2166136261;
+    for (const char of value) key = Math.imul(key ^ char.codePointAt(0), 16777619);
+    return key >>> 0;
+  }
+
+  function features(caseId, person, index) {
+    if (String(caseId).padStart(2, "0") === "01" && Object.hasOwn(gridclub, person.id)) {
+      return gridclub[person.id];
+    }
+    const key = fingerprint(caseId + "/" + person.id + "/" + person.name);
+    const shift = Number(caseId) || key % haircuts.length;
+    return [
+      (index + shift * 3) % haircuts.length,
+      (key >>> 2) % complexions.length,
+      (key >>> 9) % hairColors.length,
+      (key >>> 15) % wardrobes.length,
+      (key >>> 22) % faces.length,
+      (index + (key >>> 27)) % 6,
+      (index * 3 + shift) % 9
+    ];
+  }
+
+  function costume(style, jacket, trim) {
+    const edge = inked(1.3);
+    const collar = [
+      path("m5 29 5-3 5 3 3 6H5zm26 0-5-3-5 3-3 6h13z", trim, edge),
+      path("m2 31 8-4 3 4v4H2zm32 0-8-4-3 4v4h11z", trim, edge),
+      path("m10 25 4 2 4 7-7-3-4-4zm16 0-4 2-4 7 7-3 4-4z", trim, edge),
+      path("m2 31 5-4 5 1-2 5H2zm32 0-5-4-5 1 2 5h8z", trim, edge),
+      path("m9 26 4-1 5 5 5-5 4 1-3 6-6 2-6-2z", trim, edge),
+      path("m9 28 5-2 3 4 1 5h-4l-4-3zm18 0-5-2-3 4-1 5h4l4-3z", trim, edge)
+    ][style];
+    return path("M1.5 35v-2.5q.4-4 8-6.2l5.1-1.2h6.8l5.1 1.2q7.6 2.2 8 6.2V35z", jacket, edge)
+      + collar + line("M18 32v3", outline) + line("M4 33h4m20 0h4", trim, 1.15);
+  }
+
+  function detail(kind, trim) {
+    const edge = inked(1.15);
+    switch (kind) {
+      case 0:
+        return path("m19.5 12.4 6-.4 1 2.5-1.6 2.4-5.2-.1-1-2.3z", "#182439", edge)
+          + line("m21 14.6 3.8-.4", "#91fff1", 1.4)
+          + line("m25.4 16.4-.7 2.6-1.8.7", "#32556d", 1.1);
+      case 1:
+        return path("m8.2 13.6 2 1.2-.2 5.1-2.1.1-1-2.6z", trim, edge)
+          + line("M8.3 20.1v2l3.9 1.4", outline)
+          + dot(12.3, 23.6, .8, trim, outline);
+      case 2:
+        return dot(14.2, 15.2, 2.7, "#213344", outline)
+          + dot(21.8, 15.2, 2.7, "#213344", outline)
+          + line("M16.9 15h2.2", outline, 1.3)
+          + line("m13 14.5 1.6-.7m6 .7 1.6-.7", "#a8fff1", 1.2);
+      case 3:
+        return path("m9.8 12.4 16.2.4-.4 4.2-4.2 1.1-6.5-.3-4.7-1z", "#252344", edge)
+          + line("m11.9 14.9 11.7.2", trim, 1.55)
+          + line("m13.5 13.2 2.1.1", "#fff6e9", 1);
+      case 4:
+        return line("m24 19.1-2 1.9m1.2-2.9-1.6 1.4", "#9b3e6c", 1.2)
+          + dot(10.6, 21.3, 1.25, trim, outline);
+      case 5:
+        return dot(12.9, 18.7, .62, "#8c483a")
+          + dot(14.7, 18.6, .6, "#8c483a")
+          + dot(22.4, 18.6, .62, "#8c483a")
+          + dot(24.2, 18.4, .61, "#8c483a")
+          + line("m25 8 2.2 2m-3.5-.9 2.3 2.1", trim, 1.55);
+      case 6:
+        return path("m24.4 16.6 1.6.6-1 5-3.8 3.2-2.2-2 2.9-1.4z", "#d3f4f1", edge)
+          + dot(23.4, 21.1, .85, "#336275")
+          + line("m21.1 23.7 2.4-1.6", "#336275", .95);
+      case 7:
+        return line("M7 15v-2a11 11 0 0 1 22 0v2", outline, 3.15)
+          + line("M7 15v-2a11 11 0 0 1 22 0v2", "#8defff", 1.45)
+          + path("M5.9 14.2h3.5v6.7H6q-1.7-2.9-.1-6.7zm24.2 0h-3.5v6.7H30q1.7-2.9.1-6.7z", "#a8fcf6", edge);
+      default:
+        return path("m24.7 18.8 1.6.2-1.2 3.4-1.5.8-1-.9z", trim, edge)
+          + line("m11 7 3-2", trim, 1.35);
+    }
+  }
+
+  function draw(caseId, person, index, victim) {
+    const [hair, complexion, dye, outfit, shape, clothes, kit] = features(caseId, person, index);
+    const [skin, shadow] = complexions[complexion];
+    const [hairTone, glint] = hairColors[dye];
+    const [jacket, trim] = wardrobes[outfit];
+    const cut = haircuts[hair];
+    const border = inked(1.35);
+    const accent = personColors[index];
+    const mark = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    mark.setAttribute("viewBox", "0 0 36 36");
+    mark.setAttribute("aria-hidden", "true");
+    mark.setAttribute("focusable", "false");
+    mark.setAttribute("overflow", "hidden");
+    mark.setAttribute("stroke-linejoin", "round");
+    mark.setAttribute("stroke-linecap", "round");
+    const face = path(faces[shape], skin, border)
+      + path("m22.4 12.5 2.6-.3-.4 6.8q-.6 4.4-4.1 5.9l1.2-2.3q2-2.8.7-10.1z", shadow, ' opacity=".6"')
+      + line("m12.3 12.9 2.9-.8m5.6 0 2.9.8", outline, 1.15)
+      + line("M13.2 15.1h1.6m6.4 0h1.6", outline, 1.45)
+      + line("m18.3 16.4-.9 2.7 1.5.1", shadow, 1.15)
+      + line(shape === 1 || shape === 3 ? "m16 22 4-.3" : "M15.8 21.7q2.2 1.3 4.4-.3", outline, 1)
+      + line("m12.3 18.1 1 .2", "#fff3e1", .85);
+    const turn = (fingerprint(caseId + "/" + person.id) & 3) === 1;
+    const card = '<rect x="0" y="0" width="36" height="36" rx="4" fill="' + accent + '"/>'
+      + path("M0 11 11 0h8L0 19zm36 6v6L23 36h-7z", "#fafff0", ' opacity=".53"')
+      + line("M3 25v-4m29 3v-7M3 7V3h5m20 29h5v-4", "#23334b", .92);
+    const drawing = path(cut.back, hairTone, border)
+      + costume(clothes, jacket, trim)
+      + path("m14.4 23.9 7.2.1v3.9L18 30l-3.6-2.1z", shadow, inked(1.1))
+      + path("M10.9 15.2q-3.5-.7-2.8 2.4.7 2.4 2.8 2.4m14.2-4.8q3.5-.7 2.8 2.4-.7 2.4-2.8 2.4", skin, inked(1.05))
+      + face
+      + path(cut.front, hairTone, border)
+      + line(cut.glint, glint, 1.6)
+      + detail(kit, trim);
+    const victimSeal = victim
+      ? path("M27.5 1.1h5.9l1.7 1.7v6.3l-1.7 1.7h-5.9l-1.7-1.7V2.8z", "#8c1948", ' stroke="#fff4ea" stroke-width="1.1"')
+        + line("m28.1 4.2 2.4 3.9 2.3-3.9", "#fff4ea", 1.4)
+      : "";
+    mark.innerHTML = card + (turn ? '<g transform="translate(36 0) scale(-1 1)">' + drawing + '</g>' : drawing) + victimSeal;
+    return mark;
+  }
+  return draw;
+})();
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 const effects = new WeakMap();
 const gestures = {
@@ -939,16 +1196,6 @@ function glyph(type, wide = false) {
   return svg;
 }
 
-function portraitMark(index, victim) {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 28 28");
-  svg.setAttribute("aria-hidden", "true");
-  svg.innerHTML = victim
-    ? '<path d="M14 3l10 11-10 11L4 14z" fill="#472337"/><path d="m10 10 4 9 4-9" fill="none" stroke="#ffe5e1" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>'
-    : portraitShapes[index % portraitShapes.length];
-  return svg;
-}
-
 function row(cell) { return Math.floor(cell / 8); }
 function col(cell) { return cell % 8; }
 function room(cell) { return currentCase.rooms[row(cell)][col(cell)]; }
@@ -1039,8 +1286,12 @@ function buildBoard() {
   const spans = currentCase.spans || [];
   const spannedCells = new Set(spans.flatMap(span => span.cells));
   cells = Array.from({ length: 64 }, (_, index) => {
-    const button = make("button", "cell floor-" + floorIndex(room(index)));
+    const id = room(index);
+    const material = caseMaterials[currentCase.id][id];
+    const button = make("button", "cell floor-" + floorIndex(id) + " material-" + material);
     button.type = "button";
+    button.style.setProperty("--floor-x", (-12.5 * col(index)) + "cqw");
+    button.style.setProperty("--floor-y", (-12.5 * row(index)) + "cqw");
     if (col(index) < 7 && room(index + 1) !== room(index)) button.style.setProperty("--wall-right", "3px");
     if (row(index) < 7 && room(index + 8) !== room(index)) button.style.setProperty("--wall-bottom", "3px");
     const type = currentCase.objects[index];
@@ -1082,7 +1333,7 @@ function buildRoster() {
     button.type = "button";
     button.style.setProperty("--person", personColors[i]);
     const portrait = make("span", "portrait");
-    portrait.append(portraitMark(i, victim));
+    portrait.append(portraitMark(currentCase.id, p, i, victim));
     button.append(portrait, make("span", "person-name", p.name));
     button.addEventListener("click", () => selectPerson(p.id));
     fragment.append(button);
@@ -1143,6 +1394,12 @@ function render() {
   const clue = byId("clue-text");
   const clueKey = currentCase.id + "/" + selected;
   if (clue.dataset.key !== clueKey) {
+    const index = personIndex(selected);
+    const victim = selected === currentCase.victim;
+    const portrait = byId("clue-portrait");
+    portrait.style.setProperty("--person", personColors[index]);
+    portrait.classList.toggle("victim-portrait", victim);
+    portrait.replaceChildren(portraitMark(currentCase.id, active, index, victim));
     byId("clue-glyphs").replaceChildren(...active.items.map(type => glyph(type)));
     clue.textContent = active.clue;
     clue.dataset.key = clueKey;
