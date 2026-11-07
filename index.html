@@ -473,6 +473,20 @@
     .clue { min-height: 87px; }
     .clue-text { font-size: .89rem; }
   }
+  @media (max-width: 749px) and (orientation: portrait) {
+    .game {
+      height: auto;
+      min-height: 100vh;
+      min-height: 100dvh;
+      grid-template-rows: repeat(6, auto);
+      align-content: center;
+    }
+    .stage { container-type: normal; }
+    .board {
+      width: min(100%, max(205px, calc(100vh - 272px)), 560px);
+      width: min(100%, max(205px, calc(100dvh - 272px)), 560px);
+    }
+  }
   @media (max-width: 355px), (max-height: 580px) {
     .game { gap: 4px; }
     .clue { min-height: 74px; }
