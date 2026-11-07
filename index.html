@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101624">
-<meta name="description" content="Néon Noir, six enquêtes de déduction cyberpunk sur des plans 8 × 8.">
+<meta name="description" content="Néon Noir, 25 enquêtes de déduction pour la saison Cyberpunk.">
 <title>Néon Noir · Enquêtes cyberpunk</title>
 <style>
   :root {
@@ -64,7 +64,7 @@
     letter-spacing: .085em;
     text-transform: uppercase;
   }
-  .series { color: var(--acid); }
+  .series { color: var(--acid); white-space: nowrap; }
   .series .slashes { color: var(--pink); }
   .head-actions { display: flex; align-items: center; gap: 5px; }
   .pill {
@@ -110,6 +110,7 @@
   .board {
     position: relative;
     display: grid;
+    container-type: inline-size;
     grid-template: repeat(8, minmax(0, 1fr)) / repeat(8, minmax(0, 1fr));
     isolation: isolate;
     width: min(100%, calc(100vh - 276px), 560px);
@@ -151,18 +152,26 @@
     border-right: var(--wall-right, 0px) solid var(--ink);
     border-bottom: var(--wall-bottom, 0px) solid var(--ink);
   }
-  .room-stamp {
+  .room-plaque {
     position: absolute;
-    z-index: 2;
+    z-index: 4;
     pointer-events: none;
-    left: 3px;
-    top: 3px;
-    min-width: 1.25em;
-    padding: 1px 2px;
+    left: 2px;
+    top: 2px;
+    max-width: calc(100% - 5px);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding: 1px 3px;
     border: 1px solid var(--ink);
-    background: var(--paper);
-    color: var(--ink);
-    font: 900 clamp(.47rem, 1.7vw, .69rem)/1 ui-monospace, monospace;
+    border-bottom: 2px solid var(--floor);
+    border-radius: 2px;
+    background: var(--ink);
+    color: #fff8e9;
+    font: 900 .52rem/1 system-ui, sans-serif;
+    font-size: clamp(.37rem, var(--plaque-size, 2.45cqw), .82rem);
+    letter-spacing: .015em;
+    text-transform: uppercase;
   }
   .object {
     position: absolute;
@@ -172,10 +181,41 @@
     place-items: center;
     pointer-events: none;
   }
-  .object svg { width: 100%; height: 100%; }
-  .cell.object-focus .object {
-    filter: drop-shadow(0 0 1px white) drop-shadow(0 0 2px white);
+  .object svg, .furniture-span svg { width: 100%; height: 100%; }
+  .cell.plaque-tile .object { top: 33%; bottom: 3%; }
+  .furniture-span {
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;
+    inset: 7% 4%;
   }
+  .cell.object-focus .object, .furniture-span.object-focus {
+    filter: drop-shadow(0 0 1px #102033) drop-shadow(0 0 3px #f5ff71);
+    animation: signal-object .39s cubic-bezier(.2,.8,.2,1);
+  }
+  .board-fx {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .scan-beam {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, transparent 27%, #51ffdd88 49%, #e6ff8b 50%, transparent 51%);
+    animation: read-plan .62s cubic-bezier(.18,.67,.35,1) both;
+  }
+  .line-beam {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    inset: 0;
+    background: #dfff7a;
+    transform-origin: left center;
+    animation: row-pulse .42s cubic-bezier(.2,.8,.4,1) both;
+  }
+  .line-beam.column { transform-origin: center top; animation-name: column-pulse; }
   .cell.blocked { background-color: color-mix(in srgb, var(--floor) 73%, #63758d); }
   .cell.blocked::before {
     content: "×";
@@ -219,6 +259,7 @@
     pointer-events: none;
   }
   .cell.occupied .token { display: grid; }
+  .cell.plaque-tile .token { inset: 36% 15% 8%; }
   .cell.occupied .object { opacity: .4; }
   .token.victim { border-style: dashed; }
   .cell.selected-piece .token { outline: 2px solid white; }
@@ -249,14 +290,15 @@
     position: relative;
     display: grid;
     place-items: center;
-    width: 21px;
-    height: 21px;
+    width: 23px;
+    height: 23px;
     border: 1px solid var(--ink);
     border-radius: 5px;
     background: var(--person, var(--acid));
     color: var(--ink);
     font: 950 .62rem/1 ui-monospace, monospace;
   }
+  .portrait svg { width: 100%; height: 100%; }
   .person-name {
     max-width: 100%;
     padding: 0 1px;
@@ -272,12 +314,19 @@
     text-decoration-thickness: 2px;
   }
   .person.placed .portrait::after {
-    content: "";
+    content: "✓";
     position: absolute;
-    width: 113%;
-    height: 2px;
-    background: var(--ink);
-    rotate: -35deg;
+    right: -4px;
+    bottom: -3px;
+    display: grid;
+    width: 12px;
+    height: 12px;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    background: #ecff9a;
+    font: 950 .57rem/1 system-ui, sans-serif;
   }
   .person.victim .portrait { border-style: dashed; }
   .clue {
@@ -364,7 +413,7 @@
   }
   dialog {
     width: min(calc(100% - 22px), 515px);
-    max-height: min(88dvh, 690px);
+    max-height: min(calc(100dvh - 16px), 690px);
     padding: 0;
     border: 2px solid var(--ink);
     border-radius: 10px;
@@ -374,6 +423,8 @@
     overscroll-behavior: contain;
   }
   dialog::backdrop { background: #090e1bc9; }
+  dialog[open] { animation: enter-panel .23s cubic-bezier(.2,.8,.2,1); }
+  dialog[open]::backdrop { animation: reveal-backdrop .23s ease-out; }
   .dialog-head {
     position: sticky;
     z-index: 1;
@@ -387,6 +438,16 @@
     background: var(--acid);
   }
   .dialog-head h2 { margin: 0; font-size: 1.06rem; line-height: 1.15; }
+  .verdict-banner {
+    padding: 9px 10px;
+    margin: 0 0 10px;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    font: 950 .72rem/1.2 ui-monospace, monospace;
+    letter-spacing: .13em;
+    background: linear-gradient(110deg, #bcf7df, var(--acid));
+    animation: verdict-stamp .46s cubic-bezier(.2,.85,.26,1.2);
+  }
   .close {
     width: 35px;
     height: 35px;
@@ -426,6 +487,15 @@
     font-weight: 730;
   }
   .object-key svg { width: 24px; height: 24px; }
+  .season-progress { margin: 0 0 9px; color: #41485a; font-size: .8rem; }
+  .case-pages {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .case-pages .dialog-button { min-height: 34px; padding: 2px; font-size: .69rem; }
+  .case-pages [aria-pressed="true"] { background: var(--ink); color: var(--paper); }
   .level-list { display: grid; gap: 6px; }
   .level {
     display: grid;
@@ -483,6 +553,24 @@
     }
     .board { min-width: min(100%, 185px); }
   }
+  @media (min-width: 400px) and (max-width: 749px) and (orientation: portrait) {
+    .game {
+      --game-height: min(100dvh, calc(100vw + 325px + env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+      padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right));
+      gap: 7px;
+    }
+    .masthead h1 { font-size: 1.48rem; }
+    .pill, .legend-button, .close, .remove { min-height: 44px; }
+    .close { width: 44px; }
+    .meta .technical, .status { font-size: .79rem; }
+    .person { min-height: 54px; }
+    .portrait { width: 30px; height: 30px; }
+    .person-name { font-size: .8rem; }
+    .clue { min-height: 101px; align-content: center; }
+    .clue-text { font-size: .94rem; }
+    .clue-glyphs svg { width: 23px; height: 23px; }
+    .tool { min-height: 49px; font-size: .87rem; }
+  }
   @media (max-width: 355px), (max-height: 580px) {
     .game { gap: 4px; }
     .clue { min-height: 74px; }
@@ -498,6 +586,38 @@
       grid-template-areas: "header header" "stage meta" "stage roster" "stage clue" "stage tools" "stage .";
       column-gap: 12px;
     }
+  }
+  @keyframes read-plan {
+    from { transform: translateY(-56%); opacity: .18; }
+    30% { opacity: .9; }
+    to { transform: translateY(56%); opacity: 0; }
+  }
+  @keyframes row-pulse {
+    from { transform: scaleX(.04); opacity: .68; }
+    55% { transform: scaleX(1); opacity: .38; }
+    to { transform: scaleX(1); opacity: 0; }
+  }
+  @keyframes column-pulse {
+    from { transform: scaleY(.04); opacity: .68; }
+    55% { transform: scaleY(1); opacity: .38; }
+    to { transform: scaleY(1); opacity: 0; }
+  }
+  @keyframes signal-object {
+    0%, 100% { transform: scale(1); }
+    45% { transform: scale(1.14); }
+  }
+  @keyframes enter-panel {
+    from { opacity: 0; transform: translateY(13px) scale(.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes reveal-backdrop { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes verdict-stamp {
+    from { transform: scale(.86) rotate(-2deg); opacity: .2; }
+    65% { transform: scale(1.025); opacity: 1; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; scroll-behavior: auto !important; }
   }
 </style>
 </head>
@@ -536,7 +656,7 @@
     </div>
     <div class="clue-content">
       <span class="clue-glyphs" id="clue-glyphs" aria-hidden="true"></span>
-      <p class="clue-text" id="clue-text"></p>
+      <p class="clue-text" id="clue-text" aria-live="polite"></p>
     </div>
   </section>
   <div class="tools" role="group" aria-label="Actions de jeu">
@@ -556,12 +676,31 @@
 "use strict";
 
 const cases = [
-  {"id":"01","title":"Le Dernier Set","venue":"Gridclub","difficulty":"Initiation","intro":"En plein set de Nova, le Gridclub plonge dans le noir. À la reprise du courant, la DJ est morte. Les capteurs de proximité du club ont enregistré les derniers déplacements.","rooms":["AAABBBBB","AAAABBBB","CAAAABBD","CCAAADDD","CCCCDDDD","CCCEDDDD","CCCEEEED","CCEEEEEE"],"roomNames":{"A":"Serveurs","B":"Régie","C":"Bar","D":"Atelier","E":"Loges"},"objects":{"2":"seat","9":"seat","21":"seat","36":"seat","53":"seat","16":"bench","34":"bench","58":"bench","14":"rug","39":"rug","44":"rug","60":"rug","13":"terminal","17":"terminal","30":"terminal","38":"terminal","45":"terminal","61":"terminal","24":"dispenser","42":"dispenser","59":"dispenser","5":"screen","37":"screen","7":"speaker","15":"speaker","51":"speaker","52":"speaker"},"people":[{"id":"aiko","name":"Aiko","clue":"Sur un fauteuil, à côté d’un terminal.","items":["seat","terminal"]},{"id":"brix","name":"Brix","clue":"À côté d’un écran.","items":["screen"]},{"id":"coda","name":"Coda","clue":"Sur une banquette, à côté d’un distributeur.","items":["bench","dispenser"]},{"id":"dax","name":"Dax","clue":"À côté d’un terminal, dans la même pièce qu’Emi.","items":["terminal"]},{"id":"emi","name":"Emi","clue":"Sur un tapis, à côté d’un terminal.","items":["rug","terminal"]},{"id":"fox","name":"Fox","clue":"À côté d’une enceinte.","items":["speaker"]},{"id":"gaku","name":"Gaku","clue":"À côté d’un distributeur, dans la même pièce que Coda.","items":["dispenser"]},{"id":"nova","name":"Nova","clue":"Sur un tapis, à côté d’une enceinte.","items":["rug","speaker"]}],"victim":"nova","solution":{"aiko":9,"brix":6,"coda":16,"dax":29,"emi":39,"fox":43,"gaku":50,"nova":60},"hints":["Cherche une colonne où un seul personnage a une case compatible avec son indice. Regarde près des enceintes.","Coda et Gaku ne peuvent se trouver dans une pièce où toutes les cases près du distributeur partagent la rangée de la banquette.","Compare les tapis possibles pour Emi et Nova. Pour chaque option d’Emi, vérifie qu’il reste une case près d’un terminal pour Dax dans la même pièce."]},
-  {"id":"02","title":"Le Quai fantôme","venue":"Station Nadir","difficulty":"Facile","intro":"Une rame vide rentre au quai. Sa conductrice, Sol, a été retrouvée morte dans la station.","rooms":["AABBBBBB","AAABBBBB","AAABBBCC","AAACCCCC","DCCCCCCC","DDDCCCEE","DDDDCEEE","DDDCCEEE"],"roomNames":{"A":"Cabine","B":"Quai","C":"Hall","D":"Atelier","E":"Fret"},"objects":{"0":"seat","1":"dispenser","3":"bench","6":"screen","8":"screen","9":"screen","14":"seat","15":"bench","22":"speaker","23":"bench","26":"dispenser","27":"speaker","29":"terminal","30":"terminal","33":"speaker","37":"rug","38":"rug","39":"seat","40":"terminal","41":"bench","42":"dispenser","47":"screen","48":"rug","52":"rug","59":"dispenser"},"people":[{"id":"ada","name":"Ada","clue":"À côté d’un écran.","items":["screen"]},{"id":"bash","name":"Bash","clue":"À côté d’une banquette et d’un terminal.","items":["bench","terminal"]},{"id":"chim","name":"Chim","clue":"Sur un fauteuil.","items":["seat"]},{"id":"drift","name":"Drift","clue":"À côté d’un tapis et d’un terminal.","items":["rug","terminal"]},{"id":"enzo","name":"Enzo","clue":"Une enceinte dans sa pièce, mais aucune à côté.","items":["speaker"]},{"id":"faye","name":"Faye","clue":"À côté d’un tapis.","items":["rug"]},{"id":"glitch","name":"Glitch","clue":"À côté d’un terminal.","items":["terminal"]},{"id":"sol","name":"Sol","clue":"À côté d’une banquette, seule avec le coupable.","items":["bench"]}],"victim":"sol","solution":{"ada":17,"bash":31,"chim":14,"drift":37,"enzo":43,"faye":60,"glitch":48,"sol":2},"hints":["Commence par Bash. Une seule case touche à la fois un terminal et une banquette de la même pièce.","Après la pose de Bash, cherche une rangée dont les seules cases possibles sont près d’un écran. Ada doit occuper cette rangée.","Drift touche à la fois un tapis et un terminal. Parmi ces cases, barre celles dont la colonne est déjà prise."]},
-  {"id":"03","title":"La Greffe de minuit","venue":"Clinique Mirage","difficulty":"Intermédiaire","intro":"Un implant disparaît du bloc. Sélène, responsable de son transfert, est retrouvée morte.","rooms":["AAAABBBC","AAADBBCC","AADDDBCC","AADDDCCC","EEDDDCFF","EEEDDFFF","EEEEFFFF","EEEFFFFF"],"roomNames":{"A":"Accueil","B":"Labo","C":"Chambre froide","D":"Bloc","E":"Pharmacie","F":"Salle blanche"},"objects":{"3":"rug","10":"bench","11":"seat","14":"seat","16":"seat","17":"rug","19":"bench","20":"terminal","23":"dispenser","25":"speaker","27":"dispenser","28":"rug","29":"seat","37":"rug","38":"speaker","41":"bench","42":"dispenser","44":"screen","52":"terminal","53":"screen","56":"speaker","58":"terminal","61":"bench"},"people":[{"id":"argo","name":"Argo","clue":"Un écran dans sa pièce, mais aucun à côté.","items":["screen"]},{"id":"byte","name":"Byte","clue":"À côté d’un fauteuil.","items":["seat"]},{"id":"cipher","name":"Cipher","clue":"À côté d’un écran.","items":["screen"]},{"id":"delta","name":"Delta","clue":"Sur une banquette, à côté d’un distributeur.","items":["bench","dispenser"]},{"id":"echo","name":"Echo","clue":"À côté d’une banquette.","items":["bench"]},{"id":"flux","name":"Flux","clue":"Sur un fauteuil, dans la même pièce que Cipher.","items":["seat"]},{"id":"ghost","name":"Ghost","clue":"À côté d’un tapis, dans la même pièce qu’Echo.","items":["rug"]},{"id":"selene","name":"Sélène","clue":"Sur une banquette, seule avec le coupable.","items":["bench"]}],"victim":"selene","solution":{"argo":55,"byte":30,"cipher":36,"delta":41,"echo":2,"flux":11,"ghost":16,"selene":61},"hints":["Flux a besoin d’un fauteuil. Cipher doit toucher un écran dans la même pièce. Seul le Bloc réunit ces deux possibilités.","Le fauteuil de Flux condamne l’une des deux cases voisines de l’écran du Bloc. Place Cipher sur l’autre.","Les deux banquettes voisines d’un distributeur sont les seules options de Delta. La pose de Flux bloque celle du Bloc."]},
-  {"id":"04","title":"Le Pli noir","venue":"Tri postal Fret 8","difficulty":"Intermédiaire","intro":"Une capsule de données a disparu de Fret 8 pendant la relève. Lin, qui devait en signer la livraison, a été retrouvée morte. Les balises du centre de tri livrent leurs derniers relevés.","rooms":["AAABBBBB","AAABBBBB","AAAACBBB","DDACCCBB","DDDCCCCE","DDDDCCEE","DDDDCEEE","DDDDEEEE"],"roomNames":{"A":"Sas","B":"Tri","C":"Contrôle","D":"Quai","E":"Consigne"},"objects":{"0":"speaker","5":"bench","6":"seat","8":"terminal","9":"rug","10":"screen","15":"dispenser","18":"speaker","24":"bench","30":"terminal","36":"bench","37":"speaker","40":"screen","41":"seat","43":"terminal","45":"screen","48":"rug","51":"screen","59":"dispenser","60":"dispenser","62":"screen"},"people":[{"id":"sumi","name":"Sumi","clue":"À côté d’un tapis.","items":["rug"]},{"id":"kern","name":"Kern","clue":"À côté d’un fauteuil, dans une pièce sans enceinte.","items":["seat","speaker"]},{"id":"pia","name":"Pia","clue":"À côté d’un terminal.","items":["terminal"]},{"id":"ivo","name":"Ivo","clue":"À côté d’un distributeur et d’un fauteuil.","items":["dispenser","seat"]},{"id":"mina","name":"Mina","clue":"À côté d’un distributeur, sans tapis adjacent.","items":["dispenser","rug"]},{"id":"holt","name":"Holt","clue":"Sur une banquette, à côté d’une enceinte.","items":["bench","speaker"]},{"id":"rin","name":"Rin","clue":"À côté d’une enceinte.","items":["speaker"]},{"id":"lin","name":"Lin","clue":"Sur un tapis.","items":["rug"]}],"victim":"lin","solution":{"sumi":1,"kern":42,"pia":31,"ivo":14,"mina":61,"holt":36,"rin":19,"lin":48},"hints":["Compare les banquettes. Une seule touche une enceinte dans la même pièce.","Une fois Holt placé, cherche une colonne où un seul relevé correspond encore à une case.","Lin a deux tapis possibles. Une fois Ivo placé, vérifie lequel reste disponible."]},
-  {"id":"05","title":"La Mue de Chrome","venue":"Atelier Miroir","difficulty":"Difficile","intro":"Pendant une greffe de chrome clandestine, l’atelier Miroir coupe le réseau. Au redémarrage, le mécanicien Silex est retrouvé mort. Les appareils ont gardé la trace des déplacements.","rooms":["AABBBBBB","AAABBCBB","AAAAACCC","DAAAACCE","DDDCCCEE","DDFFCCEE","DDFFFEEE","DFFFFEEE"],"roomNames":{"A":"Accueil","B":"Atelier","C":"Diagnostic","D":"Archives","E":"Bloc","F":"Réveil"},"objects":{"0":"dispenser","4":"terminal","5":"dispenser","8":"rug","10":"rug","13":"bench","15":"speaker","20":"terminal","21":"speaker","25":"rug","27":"seat","28":"speaker","34":"rug","35":"terminal","36":"seat","37":"screen","38":"speaker","39":"dispenser","40":"dispenser","41":"rug","42":"seat","46":"rug","56":"seat","57":"bench","58":"rug"},"people":[{"id":"nila","name":"Nila","clue":"À côté d’une enceinte, dans une pièce sans fauteuil.","items":["speaker","seat"]},{"id":"tao","name":"Tao","clue":"Sur un tapis, dans une pièce avec un fauteuil.","items":["rug","seat"]},{"id":"rook","name":"Rook","clue":"À côté d’un fauteuil.","items":["seat"]},{"id":"vera","name":"Véra","clue":"Sur un fauteuil.","items":["seat"]},{"id":"jo","name":"Jo","clue":"Sur un fauteuil, dans une pièce avec une enceinte.","items":["seat","speaker"]},{"id":"isak","name":"Isak","clue":"Sur une banquette.","items":["bench"]},{"id":"uma","name":"Uma","clue":"À côté d’un tapis.","items":["rug"]},{"id":"sol","name":"Silex","clue":"À côté d’une enceinte, dans une pièce avec un écran.","items":["speaker","screen"]}],"victim":"sol","solution":{"nila":7,"tao":8,"rook":19,"vera":42,"jo":36,"isak":57,"uma":54,"sol":29},"hints":["Cherche la rangée où un seul relevé peut correspondre au mobilier. Regarde les cases voisines des enceintes.","L’écran identifie la pièce de Silex. Pour chaque placement possible, garde exactement une autre personne avec lui.","Si Isak prend la banquette du Diagnostic, il bloque deux cases possibles de Silex. Dans cette hypothèse, personne d’autre ne peut rester dans la pièce."]},
-  {"id":"06","title":"Le Signal pirate","venue":"Relais Obsidienne","difficulty":"Intermédiaire","intro":"Un signal pirate éteint le relais Obsidienne pendant sa dernière diffusion. L’opératrice Ione est tuée. Les journaux audio du bâtiment retracent les mouvements de l’équipe.","rooms":["AAABBBBB","AAABBCCC","AAAABCCC","DDAABBCC","DDAEEBCC","DDEEEFFF","DDDEEEFF","DDDDEEFF"],"roomNames":{"A":"Archive","B":"Passerelle","C":"Antenne","D":"Quai","E":"Sas","F":"Noyau"},"objects":{"2":"seat","3":"seat","12":"seat","13":"seat","32":"seat","33":"seat","44":"seat","54":"seat","0":"bench","31":"bench","35":"bench","49":"bench","46":"bench","1":"rug","8":"rug","45":"rug","52":"rug","5":"rug","24":"rug","14":"rug","4":"terminal","30":"terminal","53":"terminal","48":"terminal","47":"terminal","9":"screen","21":"screen","15":"screen","25":"dispenser","50":"dispenser","59":"dispenser","11":"dispenser","6":"dispenser","43":"dispenser","63":"dispenser","17":"dispenser","10":"dispenser","23":"speaker","16":"speaker"},"people":[{"id":"ada","name":"Alba","clue":"Sur un fauteuil, dans une pièce qui contient exactement deux distributeurs.","items":["seat","dispenser"]},{"id":"blue","name":"Blue","clue":"Sur un tapis, à côté d’un écran.","items":["rug","screen"]},{"id":"cyra","name":"Cyra","clue":"Sur une banquette, à côté d’un terminal.","items":["bench","terminal"]},{"id":"driss","name":"Driss","clue":"Sur un fauteuil, à côté d’un distributeur et dans la même pièce que Gris.","items":["seat","dispenser"]},{"id":"ezra","name":"Ezra","clue":"Sur un tapis, à côté d’une banquette.","items":["rug","bench"]},{"id":"fenn","name":"Fenn","clue":"Sur un tapis, à côté d’un fauteuil.","items":["rug","seat"]},{"id":"gris","name":"Gris","clue":"À côté d’exactement deux distributeurs.","items":["dispenser"]},{"id":"ione","name":"Ione","clue":"À côté d’un écran et d’une enceinte.","items":["screen","speaker"]}],"victim":"ione","solution":{"ada":3,"blue":8,"cyra":31,"driss":33,"ezra":45,"fenn":52,"gris":58,"ione":22},"hints":["Repère les cases qui touchent deux distributeurs dans une même pièce. Puis cherche une rangée où un seul personnage a une case possible.","Quand Gris est placé, garde pour Driss les fauteuils voisins d’un distributeur dans la pièce de Gris.","Blue et Ezra peuvent viser le même tapis dans l’Archive. Cherche d’abord où Ione peut toucher à la fois un écran et une enceinte."]}
+  {"id":"01","title":"Le Dernier Set","venue":"Gridclub","difficulty":"Initiation","intro":"Une coupure interrompt le set de Nova au Gridclub. Quand les néons se rallument, on découvre le corps de la DJ. Les capteurs ont gardé huit relevés.","rooms":["AAABBBBB","AAAABBBB","CAAAABBD","CCAAADDD","CCCCDDDD","CCCEDDDD","CCCEEEED","CCEEEEEE"],"roomNames":{"A":"Réseau","B":"Régie","C":"Bar","D":"Piste","E":"Loges"},"objects":{"3":"mixer","6":"seat","13":"seat","16":"rug","18":"speaker","21":"rug","30":"seat","32":"bench","33":"rug","40":"screen","52":"bench","54":"bench","55":"screen","58":"seat","60":"seat","62":"speaker","63":"bench"},"people":[{"id":"aiko","name":"Aiko","clue":"À côté d’une enceinte.","items":["speaker"]},{"id":"brix","name":"Brix","clue":"À côté d’une table de mixage.","items":["mixer"]},{"id":"coda","name":"Coda","clue":"Sur un fauteuil, à côté d’un tapis.","items":["seat","rug"]},{"id":"dax","name":"Dax","clue":"À côté d’un écran.","items":["screen"]},{"id":"emi","name":"Emi","clue":"Sur un tapis.","items":["rug"]},{"id":"fox","name":"Fox","clue":"Sur un fauteuil.","items":["seat"]},{"id":"gaku","name":"Gaku","clue":"Sur une banquette.","items":["bench"]},{"id":"nova","name":"Nova","clue":"À côté d’un tapis.","items":["rug"]}],"victim":"nova","solution":{"aiko":19,"brix":4,"coda":13,"dax":47,"emi":33,"fox":58,"gaku":54,"nova":24},"hints":["Commence par la table de mixage. Les murs de la Régie limitent les cases où Brix peut se tenir.","Compare les fauteuils autour des tapis. Un seul fauteuil touche un tapis sans traverser de mur.","Après Brix et Coda, regarde la colonne de la table de mixage. Parmi les cases restantes, une seule correspond encore à un indice, celui d’Aiko."]},
+  {"id":"02","title":"Le Quai fantôme","venue":"Station Nadir","difficulty":"Initiation","intro":"Une rame vide entre à la station Nadir. Sa conductrice, Sol, a été tuée. Les capteurs de service ont enregistré les derniers déplacements.","rooms":["AABBBBBB","AAABBBBB","AAABBBCC","AAACCCCC","DCCCCCCC","DDDCCCEE","DDDDCEEE","DDDCCEEE"],"roomNames":{"A":"Cabine","B":"Quai","C":"Hall","D":"Atelier","E":"Fret"},"objects":{"2":"locker","9":"bench","13":"screen","19":"seat","20":"scanner","21":"seat","26":"bench","27":"bench","29":"crate","32":"screen","39":"seat","40":"seat","41":"locker","45":"seat","50":"screen","54":"crate","56":"locker","58":"bench","61":"seat"},"people":[{"id":"ada","name":"Ada","clue":"À côté d’une caisse.","items":["crate"]},{"id":"bash","name":"Bash","clue":"À côté d’un fauteuil.","items":["seat"]},{"id":"chim","name":"Chim","clue":"Sur un fauteuil, à côté d’un écran.","items":["seat","screen"]},{"id":"drift","name":"Drift","clue":"À côté d’une banquette.","items":["bench"]},{"id":"enzo","name":"Enzo","clue":"À côté d’un écran.","items":["screen"]},{"id":"faye","name":"Faye","clue":"Sur une banquette.","items":["bench"]},{"id":"glitch","name":"Glitch","clue":"À côté d’un scanner et d’un écran.","items":["scanner","screen"]},{"id":"sol","name":"Sol","clue":"Sur un fauteuil, à côté d’un casier.","items":["seat","locker"]}],"victim":"sol","solution":{"ada":55,"bash":38,"chim":21,"drift":1,"enzo":58,"faye":27,"glitch":12,"sol":40},"hints":["Repère tous les fauteuils voisins d’un casier dans leur propre pièce. Ce sont les seules options pour Sol.","Deux fauteuils touchent un écran. L’un d’eux est déjà occupé par Sol. L’autre revient à Chim.","Cherche les cases où un scanner et un écran sont voisins de la même personne. La pose de Chim en élimine une pour Glitch."]},
+  {"id":"03","title":"La Greffe de minuit","venue":"Clinique Mirage","difficulty":"Initiation","intro":"Un implant disparaît du bloc de la clinique Mirage. Sélène, qui devait en signer le transfert, a été tuée. Les balises de la clinique parlent encore.","rooms":["AAAABBBC","AAADBBCC","AADDDBCC","AADDDCCC","EEDDDCFF","EEEDDFFF","EEEEFFFF","EEEFFFFF"],"roomNames":{"A":"Triage","B":"Labo","C":"Cryo","D":"Bloc","E":"Soins","F":"Réveil"},"objects":{"2":"rug","5":"scanner","8":"seat","10":"scanner","12":"rug","16":"bed","18":"pod","30":"seat","31":"seat","32":"bed","33":"seat","46":"desk","47":"desk","50":"scanner","51":"scanner","52":"scanner","54":"seat","55":"bed","58":"desk","63":"bed"},"people":[{"id":"argo","name":"Argo","clue":"Sur un fauteuil, à côté d’un bureau.","items":["seat","desk"]},{"id":"byte","name":"Byte","clue":"Sur un tapis.","items":["rug"]},{"id":"cipher","name":"Cipher","clue":"À côté d’un fauteuil.","items":["seat"]},{"id":"delta","name":"Delta","clue":"À côté d’un caisson.","items":["pod"]},{"id":"echo","name":"Echo","clue":"Sur un fauteuil.","items":["seat"]},{"id":"flux","name":"Flux","clue":"À côté d’un lit.","items":["bed"]},{"id":"ghost","name":"Ghost","clue":"Sur un tapis, à côté d’un scanner.","items":["rug","scanner"]},{"id":"selene","name":"Sélène","clue":"Sur un lit.","items":["bed"]}],"victim":"selene","solution":{"argo":54,"byte":12,"cipher":29,"delta":19,"echo":33,"flux":40,"ghost":2,"selene":63},"hints":["Repère les fauteuils qui touchent un bureau dans leur pièce. Un seul peut accueillir Argo.","Compare les tapis voisins des scanners. Celui du Labo n’a pas de scanner sur un de ses quatre côtés.","Une fois Ghost placé sur son tapis, cherche quel autre tapis peut encore accueillir Byte."]},
+  {"id":"04","title":"Le Pli noir","venue":"Tri postal Fret 8","difficulty":"Initiation","intro":"Une capsule de données disparaît pendant la relève. Lin, qui devait en signer la livraison, a été tuée. Les capteurs du centre de tri ont gardé les relevés.","rooms":["AAABBBBB","AAABBBBB","AAAACBBB","DDACCCBB","DDDCCCCE","DDDDCCEE","DDDDCEEE","DDDDEEEE"],"roomNames":{"A":"Sas","B":"Tri","C":"Contrôle","D":"Quai","E":"Consigne"},"objects":{"0":"locker","1":"crate","6":"locker","7":"seat","8":"seat","9":"scanner","10":"crate","11":"bench","12":"seat","17":"bench","21":"scanner","27":"locker","41":"crate","42":"seat","43":"pallet","48":"bench","50":"bench","53":"pallet","54":"scanner"},"people":[{"id":"sumi","name":"Sumi","clue":"À côté d’un casier.","items":["locker"]},{"id":"kern","name":"Kern","clue":"À côté d’un fauteuil.","items":["seat"]},{"id":"pia","name":"Pia","clue":"Sur un fauteuil.","items":["seat"]},{"id":"ivo","name":"Ivo","clue":"À côté d’un scanner.","items":["scanner"]},{"id":"mina","name":"Mina","clue":"Sur une banquette, à côté d’un scanner.","items":["bench","scanner"]},{"id":"holt","name":"Holt","clue":"Sur une banquette, à côté d’un fauteuil.","items":["bench","seat"]},{"id":"rin","name":"Rin","clue":"À côté d’une palette.","items":["pallet"]},{"id":"lin","name":"Lin","clue":"Sur une banquette.","items":["bench"]}],"victim":"lin","solution":{"sumi":28,"kern":34,"pia":7,"ivo":46,"mina":17,"holt":11,"rin":61,"lin":48},"hints":["Passe les banquettes en revue. Une seule touche un scanner sans traverser de mur.","Une fois Mina placée, examine la rangée du casier du Contrôle. La seule option restante y touche le casier et correspond à Sumi.","Regarde la rangée du haut après avoir placé Sumi. Pour la remplir, il reste un fauteuil du Tri qui correspond à l’indice de Pia."]},
+  {"id":"05","title":"La Dernière Charge","venue":"Centrale Silex","intro":"La centrale perd sa dernière batterie active. Le technicien Oren a été tué pendant la panne. Les capteurs de secours n’ont gardé que les traces proches du mobilier.","rooms":["AABBBBBB","AAABBCBB","AAAAACCC","DAAAACCE","DDDCCCEE","DDFFCCEE","DDFFFEEE","DFFFFEEE"],"roomNames":{"A":"Contrôle","B":"Cellules","C":"Circuit","D":"Quai","E":"Atelier","F":"Réserve"},"difficulty":"Facile","objects":{"0":"scanner","3":"scanner","5":"seat","7":"scanner","9":"seat","23":"terminal","28":"scanner","30":"seat","37":"terminal","38":"terminal","39":"scanner","42":"seat","46":"rug","48":"rug","49":"crate","52":"crate","55":"terminal","58":"battery","60":"crate","63":"crate"},"people":[{"id":"ari","name":"Ari","clue":"Sur un fauteuil, dans la même pièce que Célia.","items":["seat"]},{"id":"bolt","name":"Bolt","clue":"À côté d’un scanner, dans une pièce sans tapis.","items":["scanner","rug"]},{"id":"celia","name":"Célia","clue":"À côté d’un scanner.","items":["scanner"]},{"id":"dune","name":"Dune","clue":"À côté d’une batterie et d’un fauteuil.","items":["battery","seat"]},{"id":"eko","name":"Eko","clue":"À côté d’un tapis.","items":["rug"]},{"id":"fara","name":"Fara","clue":"À côté d’un terminal.","items":["terminal"]},{"id":"gio","name":"Gio","clue":"Sur un tapis, dans une pièce sans fauteuil.","items":["rug","seat"]},{"id":"oren","name":"Oren","clue":"À côté d’un fauteuil.","items":["seat"]}],"victim":"oren","solution":{"ari":5,"bolt":27,"celia":15,"dune":50,"eko":56,"fara":36,"gio":46,"oren":17},"hints":["Cherche dans la Réserve une case qui touche à la fois la batterie et un fauteuil. Dune doit respecter les deux conditions.","Gio peut utiliser un tapis dans deux pièces sans fauteuil. La rangée de Dune condamne le tapis du Quai.","Une fois Dune et Gio placés, reviens aux cases à côté des tapis. Compare celles du Quai et de l’Atelier pour Eko."]},
+  {"id":"06","title":"Le Signal pirate","venue":"Relais Obsidienne","difficulty":"Facile","intro":"Un signal pirate coupe le relais Obsidienne pendant sa dernière diffusion. L’opératrice Ione a été tuée. Les journaux de proximité sont intacts.","rooms":["AAABBBBB","AAABBCCC","AAAABCCC","DDAABBCC","DDAEEBCC","DDEEEFFF","DDDEEEFF","DDDDEEFF"],"roomNames":{"A":"Archive","B":"Passerelle","C":"Veille","D":"Quai","E":"Sas","F":"Émetteur"},"objects":{"3":"bench","5":"seat","8":"rug","10":"seat","17":"bench","24":"terminal","26":"rug","33":"terminal","36":"seat","37":"terminal","39":"seat","45":"rug","48":"bench","53":"screen","54":"screen","55":"terminal","58":"bench","62":"antenna","63":"terminal"},"people":[{"id":"alix","name":"Alix","clue":"Sur un tapis, dans une pièce avec une antenne.","items":["rug","antenna"]},{"id":"blue","name":"Blue","clue":"Sur un fauteuil.","items":["seat"]},{"id":"cyra","name":"Cyra","clue":"À côté d’un fauteuil, dans la même pièce qu’Ezra.","items":["seat"]},{"id":"driss","name":"Driss","clue":"À côté d’une banquette.","items":["bench"]},{"id":"ezra","name":"Ezra","clue":"À côté d’une banquette, dans une pièce avec un fauteuil.","items":["bench","seat"]},{"id":"fenn","name":"Fenn","clue":"À côté d’un écran.","items":["screen"]},{"id":"gris","name":"Gris","clue":"À côté d’exactement deux terminaux.","items":["terminal"]},{"id":"ione","name":"Ione","clue":"Sur une banquette.","items":["bench"]}],"victim":"ione","solution":{"alix":45,"blue":39,"cyra":6,"driss":16,"ezra":11,"fenn":52,"gris":25,"ione":58},"hints":["Cherche l’antenne, puis les tapis de sa pièce. Un seul tapis peut accueillir Alix.","L’Émetteur et le Sas ont chacun un écran. Barre les cases proches d’un écran dans la rangée et la colonne prises par Alix pour trouver Fenn.","Dans le Quai, deux cases touchent les deux terminaux. Pour les départager, demande-toi qui peut encore occuper la rangée du terminal isolé contre le bord gauche."]},
+  {"id":"07","title":"L’Ombre du drone","venue":"Hangar Éclipse","intro":"Le registre annonce un décollage sans pilote. Nao, qui devait réceptionner le drone, a été tué dans le hangar. La sécurité a relevé les positions autour du matériel.","rooms":["AAABBBBB","AAAAABBB","DAAACBBB","DAACCCBB","DDCCCCCE","DDDDCCEE","DDDDCCEE","DDDEEEEE"],"roomNames":{"A":"Bureau","B":"Piste","C":"Atelier","D":"Fret","E":"Sas"},"difficulty":"Facile","objects":{"1":"crate","8":"bench","17":"bench","20":"bench","21":"scanner","23":"desk","25":"seat","26":"desk","27":"crate","30":"robot","36":"crate","37":"scanner","38":"scanner","39":"desk","45":"robot","47":"seat","56":"seat","57":"bench","63":"crate"},"people":[{"id":"axel","name":"Axel","clue":"À côté d’une banquette.","items":["bench"]},{"id":"brume","name":"Brume","clue":"À côté d’un bureau.","items":["desk"]},{"id":"cleo","name":"Cléo","clue":"À côté d’exactement deux caisses, dans la même pièce que Dja.","items":["crate"]},{"id":"dja","name":"Dja","clue":"Sur une banquette.","items":["bench"]},{"id":"eden","name":"Eden","clue":"À côté d’un drone.","items":["robot"]},{"id":"faun","name":"Faun","clue":"Sur un fauteuil, à côté d’un bureau.","items":["seat","desk"]},{"id":"gwen","name":"Gwen","clue":"À côté d’un fauteuil, sans caisse à côté.","items":["seat","crate"]},{"id":"nao","name":"Nao","clue":"À côté d’une banquette, dans une pièce avec une caisse.","items":["bench","crate"]}],"victim":"nao","solution":{"axel":58,"brume":15,"cleo":35,"dja":20,"eden":53,"faun":25,"gwen":46,"nao":0},"hints":["Les deux cases voisines de deux caisses sont dans l’Atelier. Une seule est compatible avec la rangée et la colonne de sa banquette.","Après Cléo et Dja, cherche une colonne où seule une case à côté d’une banquette reste possible pour Axel.","Une fois Axel placé, regarde la rangée du haut. Parmi les cases près d’une banquette, laquelle est dans une pièce avec une caisse ?"]},
+  {"id":"08","title":"Les Nuits du chrome","venue":"Hôtel Hélios","intro":"Les portes de l’hôtel se verrouillent après le couvre-feu. Lyne, la réceptionniste, a été tuée. Il reste huit relevés dans le registre du mobilier connecté.","rooms":["AABBBBBB","AAABBBCC","AAAABCCC","DAAACCCC","DDAACCCE","DDDEEECE","DDDEEEEE","DDDDEEEE"],"roomNames":{"A":"Hall","B":"Salon","C":"Suites","D":"Service","E":"Repos"},"difficulty":"Facile","objects":{"10":"counter","12":"bed","19":"counter","24":"bed","26":"locker","27":"rug","29":"rug","30":"rug","31":"screen","37":"locker","38":"locker","39":"locker","43":"seat","47":"seat","50":"seat","51":"seat","54":"locker","56":"bed","62":"rug"},"people":[{"id":"anya","name":"Anya","clue":"À côté d’un lit.","items":["bed"]},{"id":"borel","name":"Borel","clue":"Sur un lit, sans comptoir à côté.","items":["bed","counter"]},{"id":"ciel","name":"Ciel","clue":"À côté d’un comptoir.","items":["counter"]},{"id":"dai","name":"Daï","clue":"Sur un fauteuil.","items":["seat"]},{"id":"elio","name":"Elio","clue":"Sur un tapis, à côté d’un écran.","items":["rug","screen"]},{"id":"fran","name":"Fran","clue":"À côté d’un tapis, dans la même pièce que Gaël.","items":["rug"]},{"id":"gael","name":"Gaël","clue":"À côté d’un casier.","items":["locker"]},{"id":"lyne","name":"Lyne","clue":"À côté d’un casier, dans une pièce sans comptoir.","items":["locker","counter"]}],"victim":"lyne","solution":{"anya":4,"borel":56,"ciel":9,"dai":47,"elio":30,"fran":35,"gael":18,"lyne":53},"hints":["Il n’y a qu’un écran à l’hôtel. Compare les tapis qui le touchent dans sa propre pièce pour placer Elio.","Après Elio, cherche une rangée où un seul personnage peut encore se tenir. Dans le Salon, le lit est un bon point de départ pour Anya.","Pour Borel, écarte le lit du Salon dans la colonne d’Anya et le lit du Service dans la rangée d’Elio."]},
+  {"id":"09","title":"La Mise perdue","venue":"Casino Tesseract","difficulty":"Facile","intro":"Le coffre du casino affiche un solde impossible. Nera, responsable des mises, est retrouvée morte.","rooms":["AAABBBBB","AAABBBBC","AABBBBCC","ADDDBCCC","DDDDDCCC","DDEEEECC","DEEEEEEC","DEEEEEEE"],"roomNames":{"A":"Hall","B":"Tables","C":"Salon","D":"Caisse","E":"Coffre"},"objects":{"0":"seat","1":"seat","5":"counter","7":"rug","15":"bench","18":"seat","19":"seat","20":"table","21":"rug","22":"table","23":"bench","28":"terminal","29":"bench","34":"bench","38":"table","40":"counter","45":"terminal","50":"rug","55":"table","56":"counter","63":"terminal"},"people":[{"id":"kira","name":"Kira","clue":"À côté d’une table.","items":["table"]},{"id":"milo","name":"Milo","clue":"À côté d’un terminal.","items":["terminal"]},{"id":"zara","name":"Zara","clue":"À côté d’exactement deux comptoirs.","items":["counter"]},{"id":"rook","name":"Rook","clue":"Sur un fauteuil.","items":["seat"]},{"id":"vance","name":"Vance","clue":"Sur une banquette.","items":["bench"]},{"id":"suki","name":"Suki","clue":"Sur une banquette, à côté d’une table.","items":["bench","table"]},{"id":"nix","name":"Nix","clue":"À côté d’une banquette.","items":["bench"]},{"id":"nera","name":"Nera","clue":"À côté d’un tapis, seule avec le coupable.","items":["rug"]}],"victim":"nera","solution":{"kira":12,"milo":62,"zara":48,"rook":1,"vance":29,"suki":23,"nix":35,"nera":42},"hints":["Repère les comptoirs. Une seule case touche exactement deux comptoirs dans une même pièce.","Suki est assise. Compare les banquettes qui ont une table comme voisine dans leur pièce.","Les poses de Zara et Suki barrent trois fauteuils. Il en reste un pour Rook."]},
+  {"id":"10","title":"Chambre Zéro","venue":"Hôtel Somnus","difficulty":"Facile","intro":"Une cliente ne se réveille pas. Son nom, Vela, vient de disparaître du registre de l’hôtel.","rooms":["AAAABBBB","AAACBBBB","AACCCBBB","ACCCCCBB","DDCCCEEE","DDDCEEEE","DDDDEEEE","DDDDEEEE"],"roomNames":{"A":"Accueil","B":"Nuit","C":"Couloir","D":"Lingerie","E":"Bains"},"objects":{"6":"bed","7":"rug","10":"bench","13":"rug","14":"rug","17":"terminal","19":"bed","24":"bench","29":"pod","30":"bed","38":"dispenser","39":"bench","47":"bench","49":"dispenser","55":"terminal","56":"rug","58":"pod","59":"pod","60":"pod"},"people":[{"id":"lyn","name":"Lyn","clue":"À côté d’un caisson.","items":["pod"]},{"id":"ash","name":"Ash","clue":"Sur une banquette, à côté d’un distributeur.","items":["bench","dispenser"]},{"id":"jett","name":"Jett","clue":"À côté d’exactement deux tapis.","items":["rug"]},{"id":"rami","name":"Rami","clue":"À côté d’un distributeur et d’un caisson.","items":["dispenser","pod"]},{"id":"oki","name":"Oki","clue":"Sur une banquette.","items":["bench"]},{"id":"mina","name":"Mina","clue":"À côté d’un tapis.","items":["rug"]},{"id":"tess","name":"Tess","clue":"Sur un lit.","items":["bed"]},{"id":"vela","name":"Vela","clue":"À côté d’un distributeur, seule avec le coupable.","items":["dispenser"]}],"victim":"vela","solution":{"lyn":61,"ash":39,"jett":6,"rami":50,"oki":24,"mina":12,"tess":19,"vela":41},"hints":["Repère les banquettes voisines d’un distributeur. Une seule correspond à la fiche d’Ash.","Jett touche deux tapis. La pose d’Ash barre la colonne de l’une de ses deux cases possibles.","Une fois Ash et Jett en place, il ne reste qu’un lit libre pour Tess."]},
+  {"id":"11","title":"Feu rouge","venue":"Central Aiguillage","difficulty":"Intermédiaire","intro":"Tous les signaux passent au rouge. Lune, l’ingénieure d’astreinte, est retrouvée morte.","rooms":["AAABBBBC","AABBBCCC","AABBDCCC","AAEDDDCC","AEEEDDDD","EEFFDFFF","EEFFFFFF","EEEEFFFF"],"roomNames":{"A":"Veille","B":"Régie","C":"Signal","D":"Rails","E":"Sas","F":"Relais"},"objects":{"1":"terminal","3":"screen","5":"locker","7":"bench","9":"seat","11":"screen","13":"scanner","19":"screen","23":"bench","24":"locker","26":"bench","27":"screen","31":"terminal","39":"bench","40":"scanner","41":"locker","42":"seat","46":"scanner","56":"seat","62":"locker","63":"scanner"},"people":[{"id":"zed","name":"Zed","clue":"À côté d’un casier, dans une pièce contenant un scanner.","items":["scanner","locker"]},{"id":"iona","name":"Iona","clue":"À côté d’un terminal, dans une pièce contenant un casier.","items":["locker","terminal"]},{"id":"bex","name":"Bex","clue":"À côté d’un fauteuil, avec Zed dans la même pièce.","items":["seat"]},{"id":"noor","name":"Noor","clue":"Un écran dans sa pièce, mais aucun à côté.","items":["screen"]},{"id":"rei","name":"Rei","clue":"À côté d’une banquette, dans une pièce contenant un terminal.","items":["terminal","bench"]},{"id":"oren","name":"Oren","clue":"À côté d’un scanner, dans une pièce contenant un casier.","items":["locker","scanner"]},{"id":"mika","name":"Mika","clue":"À côté d’une banquette, avec Noor dans la même pièce.","items":["bench"]},{"id":"lune","name":"Lune","clue":"À côté d’un casier, seule avec le coupable.","items":["locker"]}],"victim":"lune","solution":{"zed":61,"iona":2,"bex":43,"noor":20,"rei":15,"oren":48,"mika":38,"lune":25},"hints":["Mika touche une banquette. Noor doit avoir un écran dans sa pièce sans se tenir à côté. Compare leurs pièces possibles.","Seuls les Rails peuvent accueillir les deux. Il ne reste qu’une case près d’une banquette pour Mika.","Zed et Bex partagent aussi une pièce. Compare le Relais et le Sas en tenant compte de la pose de Mika."]},
+  {"id":"12","title":"Le Crédit de trop","venue":"Arcade Parallax","difficulty":"Intermédiaire","intro":"Un record impossible apparaît sur toutes les bornes. Sa signataire, Pix, est retrouvée morte.","rooms":["AAAABBBB","ACCCBBBB","ACCCCBBB","ACCCCCBD","AACCCDDD","EEECDDDD","EEEEEDDD","EEEEEDDD"],"roomNames":{"A":"Entrée","B":"VR","C":"Bornes","D":"Café","E":"Stock"},"objects":{"0":"dispenser","2":"bench","7":"terminal","16":"rug","18":"seat","19":"screen","22":"screen","23":"rug","25":"dispenser","28":"seat","30":"dispenser","35":"dispenser","37":"bench","43":"terminal","44":"terminal","49":"bench","51":"terminal","53":"seat","63":"rug"},"people":[{"id":"koa","name":"Koa","clue":"Sur un fauteuil, avec Nemo dans la même pièce.","items":["seat"]},{"id":"ruby","name":"Ruby","clue":"Sur un tapis.","items":["rug"]},{"id":"sora","name":"Sora","clue":"À côté d’une banquette.","items":["bench"]},{"id":"nemo","name":"Nemo","clue":"À côté d’un tapis, sans être à côté d’un terminal.","items":["rug","terminal"]},{"id":"mako","name":"Mako","clue":"Sur une banquette.","items":["bench"]},{"id":"opal","name":"Opal","clue":"À côté d’un écran, sans être à côté d’un distributeur.","items":["screen","dispenser"]},{"id":"vega","name":"Vega","clue":"À côté d’un tapis, avec Mako dans la même pièce.","items":["rug"]},{"id":"pix","name":"Pix","clue":"À côté d’un distributeur, seule avec le coupable.","items":["dispenser"]}],"victim":"pix","solution":{"koa":53,"ruby":23,"sora":41,"nemo":62,"mako":2,"opal":11,"vega":24,"pix":36},"hints":["Cherche où un fauteuil pour Koa partage une pièce avec une case près d’un tapis et sans terminal voisin pour Nemo.","Le Café est la seule pièce où les fiches de Koa et Nemo s’accordent. Chacun y a une seule case possible.","Une fois Koa et Nemo placés, Vega ne peut plus se tenir près d’un tapis du Café. Cherche où Vega peut rejoindre Mako."]},
+  {"id":"13","title":"Dernière orbite","venue":"Dock Selkie","difficulty":"Intermédiaire","intro":"Une navette quitte le dock sans sa pilote. Yara est retrouvée morte avant la relève.","rooms":["AAABBBBB","AABBBCCC","AABBCCCC","AADDCCCE","ADDDDCCE","DDDDEEEE","DDDFFEEE","DDFFFFEE"],"roomNames":{"A":"Tour","B":"Sas","C":"Veille","D":"Cargo","E":"Dock","F":"Repos"},"objects":{"0":"seat","6":"bench","12":"pod","14":"bench","15":"antenna","22":"scanner","24":"bench","27":"crate","28":"seat","30":"pod","31":"crate","32":"antenna","38":"scanner","48":"scanner","56":"crate","63":"pod"},"people":[{"id":"ari","name":"Ari","clue":"À côté d’un caisson, sans être à côté d’un fauteuil.","items":["pod","seat"]},{"id":"pax","name":"Pax","clue":"Un fauteuil dans sa pièce, mais aucun à côté.","items":["seat"]},{"id":"dune","name":"Dune","clue":"Une caisse dans sa pièce, mais aucune à côté.","items":["crate"]},{"id":"kenji","name":"Kenji","clue":"À côté d’un scanner, sans être à côté d’une antenne.","items":["scanner","antenna"]},{"id":"halo","name":"Halo","clue":"À côté d’un caisson, avec Dune dans la même pièce.","items":["pod"]},{"id":"tao","name":"Tao","clue":"Une antenne dans sa pièce, mais aucune à côté.","items":["antenna"]},{"id":"nori","name":"Nori","clue":"Sur une banquette, avec Tao dans la même pièce.","items":["bench"]},{"id":"yara","name":"Yara","clue":"À côté d’une antenne, seule avec le coupable.","items":["antenna"]}],"victim":"yara","solution":{"ari":11,"pax":37,"dune":44,"kenji":49,"halo":62,"tao":2,"nori":24,"yara":23},"hints":["Halo doit toucher un caisson dans la pièce de Dune. Il faut une caisse dans cette pièce, mais Dune ne peut pas être à côté.","Le Dock est leur seule pièce possible. Note les deux cases de Halo près des caissons du Dock.","Croise les banquettes de Nori avec les pièces où Tao peut se tenir à distance d’une antenne. Compare la Tour et la Veille."]},
+  {"id":"14","title":"Rêve parasité","venue":"Studio Hypnos","difficulty":"Intermédiaire","intro":"Une scène coupée revient dans la braindance. Numa, qui jouait le rôle principal, est retrouvée morte.","rooms":["AAABBCCC","AABBBCCC","ADBBCCCC","ADDDDCCC","DDDDEEEC","DDDEEEEF","DDEEEFFF","EEEFFFFF"],"roomNames":{"A":"Accueil","B":"Régie","C":"Plateau","D":"Son","E":"Mémoire","F":"Repos"},"objects":{"1":"screen","4":"mixer","5":"speaker","11":"seat","12":"seat","15":"bed","18":"screen","19":"mixer","20":"screen","24":"screen","25":"pod","30":"pod","41":"speaker","45":"bed","55":"pod","58":"bed","63":"pod"},"people":[{"id":"eli","name":"Eli","clue":"À côté d’un écran.","items":["screen"]},{"id":"voss","name":"Voss","clue":"Sa pièce contenait exactement deux caissons.","items":["pod"]},{"id":"luma","name":"Luma","clue":"À côté d’une enceinte, sans être à côté d’un caisson.","items":["speaker","pod"]},{"id":"skye","name":"Skye","clue":"À côté d’une table de mixage.","items":["mixer"]},{"id":"ren","name":"Ren","clue":"À côté d’un caisson, avec Voss dans la même pièce.","items":["pod"]},{"id":"bora","name":"Bora","clue":"Sur un lit, avec Yuki dans la même pièce.","items":["bed"]},{"id":"yuki","name":"Yuki","clue":"À côté d’un caisson, sans être à côté d’une enceinte.","items":["pod","speaker"]},{"id":"numa","name":"Numa","clue":"À côté d’une enceinte, seule avec le coupable.","items":["speaker"]}],"victim":"numa","solution":{"eli":16,"voss":60,"luma":42,"skye":3,"ren":54,"bora":15,"yuki":29,"numa":33},"hints":["Les lits orientent Bora, les caissons orientent Yuki. Garde les pièces où les deux peuvent se placer sur des rangées et colonnes distinctes.","Le Plateau est leur seule pièce commune. Il ne reste qu’un lit pour Bora.","Pour Ren et Voss, cherche la pièce qui contient exactement deux caissons et permet leurs deux placements."]},
+  {"id":"15","title":"La Clef du penthouse","venue":"Résidence Verre","difficulty":"Intermédiaire","intro":"Une clef biométrique ouvre un étage condamné. La propriétaire, Célia, est retrouvée morte dans l’immeuble.","rooms":["AAABBCCC","AABBBBCC","AABDDCCC","ABBDDDCC","EEDDDDCF","EEEDDDFF","EEEEDFFF","EEEEFFFF"],"roomNames":{"A":"Atrium","B":"Accès","C":"Terrasse","D":"Salon","E":"Suite","F":"Cuisine"},"objects":{"2":"screen","5":"bed","6":"counter","8":"rug","17":"seat","18":"counter","20":"seat","23":"counter","31":"rug","32":"robot","36":"rug","38":"bed","43":"screen","44":"seat","46":"seat","47":"robot","53":"robot","56":"screen"},"people":[{"id":"kael","name":"Kael","clue":"Sur un tapis.","items":["rug"]},{"id":"ise","name":"Ise","clue":"Un drone dans sa pièce, mais aucun à côté.","items":["robot"]},{"id":"juno","name":"Juno","clue":"Sa pièce contenait exactement deux comptoirs.","items":["counter"]},{"id":"nils","name":"Nils","clue":"Un comptoir dans sa pièce, mais aucun à côté.","items":["counter"]},{"id":"asha","name":"Asha","clue":"Sur un fauteuil, avec Ise dans la même pièce.","items":["seat"]},{"id":"rin","name":"Rin","clue":"À côté d’un drone.","items":["robot"]},{"id":"cyra","name":"Cyra","clue":"À côté d’un écran, avec Rin dans la même pièce.","items":["screen"]},{"id":"celia","name":"Célia","clue":"À côté d’un comptoir, seule avec le coupable.","items":["counter"]}],"victim":"celia","solution":{"kael":31,"ise":60,"juno":21,"nils":3,"asha":46,"rin":33,"cyra":48,"celia":10},"hints":["Asha et Ise partagent une pièce. Il y faut un fauteuil pour Asha et un drone à distance d’Ise.","Seule la Cuisine peut accueillir les deux. Un seul fauteuil y convient à Asha.","Rin et Cyra ne peuvent se retrouver que dans la Suite. La rangée d’Asha barre l’une des deux options de Rin."]},
+  {"id":"16","title":"Le Tirage de nuit","venue":"Imprimerie Silex","difficulty":"Intermédiaire","intro":"Des journaux annoncent un meurtre avant l’aube. Alix, qui dirigeait le tirage, est retrouvé mort.","rooms":["AAAAABBB","ACCAABBB","ACCCDBBB","ACCDDDBB","EEDDDDBF","EEDDFFFF","EEDDFFFF","EEEFFFFF"],"roomNames":{"A":"Bureaux","B":"Presse","C":"Épreuves","D":"Tri","E":"Papier","F":"Envois"},"objects":{"0":"rug","2":"desk","13":"crate","15":"bench","19":"scanner","20":"pallet","24":"desk","29":"bench","30":"crate","33":"scanner","35":"desk","36":"scanner","41":"rug","44":"pallet","48":"rug","50":"pallet"},"people":[{"id":"arwen","name":"Arwen","clue":"Une banquette dans sa pièce, mais aucune à côté.","items":["bench"]},{"id":"bryn","name":"Bryn","clue":"À côté d’une banquette, avec Arwen dans la même pièce.","items":["bench"]},{"id":"izzy","name":"Izzy","clue":"Sur une banquette.","items":["bench"]},{"id":"lark","name":"Lark","clue":"À côté d’une palette.","items":["pallet"]},{"id":"oona","name":"Oona","clue":"À côté d’une caisse, avec Izzy dans la même pièce.","items":["crate"]},{"id":"tavi","name":"Tavi","clue":"À côté d’un tapis, dans une pièce contenant un bureau.","items":["desk","rug"]},{"id":"zeno","name":"Zeno","clue":"Un tapis dans sa pièce, mais aucun à côté.","items":["rug"]},{"id":"alix","name":"Alix","clue":"À côté d’un bureau, seul avec le coupable.","items":["desk"]}],"victim":"alix","solution":{"arwen":51,"bryn":28,"izzy":15,"lark":45,"oona":38,"tavi":1,"zeno":58,"alix":16},"hints":["Oona et Izzy partagent une pièce. Cherche où Oona peut toucher une caisse et où Izzy peut prendre une banquette.","Leurs fiches s’accordent uniquement dans la Presse. Une seule banquette y convient à Izzy.","Tavi touche un tapis dans une pièce qui contient un bureau. La pose d’Izzy départage ses deux cases possibles."]},
+  {"id":"17","title":"Fréquence morte","venue":"Radio Zéro","difficulty":"Intermédiaire","intro":"L’émission de Miro s’interrompt en plein direct. Il est retrouvé mort. Quelques secondes plus tard, quelqu’un diffuse sa voix sur une ancienne fréquence de Radio Zéro.","rooms":["AAAABBBB","AAAAABBB","CAAADDBB","CCAAADBB","CCCCDDDB","ECCDDDDD","EEEDDDDD","EEEEEDDD"],"roomNames":{"A":"Sas","B":"Régie","C":"Direct","D":"Archives","E":"Relais"},"objects":{"1":"antenna","6":"screen","11":"mixer","13":"mixer","14":"mixer","15":"seat","24":"bench","29":"screen","31":"antenna","35":"screen","38":"bench","40":"bench","43":"antenna","44":"antenna","48":"antenna","51":"seat","52":"bench","57":"speaker","61":"seat"},"people":[{"id":"loe","name":"Loé","clue":"Sur un fauteuil, dans une pièce avec exactement deux tables de mixage.","items":["seat","mixer"]},{"id":"pax","name":"Pax","clue":"À côté d’une table de mixage, dans une pièce sans fauteuil.","items":["mixer","seat"]},{"id":"isa","name":"Isa","clue":"Sur une banquette.","items":["bench"]},{"id":"ciro","name":"Ciro","clue":"Sur un fauteuil.","items":["seat"]},{"id":"jade","name":"Jade","clue":"Sur une banquette, dans une pièce sans enceinte.","items":["bench","speaker"]},{"id":"neo","name":"Néo","clue":"À côté d’une table de mixage.","items":["mixer"]},{"id":"vega","name":"Vega","clue":"À côté d’une banquette.","items":["bench"]},{"id":"miro","name":"Miro","clue":"À côté d’un écran.","items":["screen"]}],"victim":"miro","solution":{"loe":15,"pax":3,"isa":40,"ciro":61,"jade":52,"neo":22,"vega":25,"miro":34},"hints":["Compte les tables de mixage dans chaque pièce, puis cherche le seul fauteuil qui répond au relevé de Loé.","Une fois Loé en place, regarde la rangée tout en bas du plan. Un seul personnage peut encore y être placé.","Après Ciro, regarde la colonne de l’enceinte du Relais. Il ne reste qu’une case possible près d’une banquette."]},
+  {"id":"18","title":"Circuit de combat","venue":"Arène Fer 7","difficulty":"Intermédiaire","intro":"Le dernier drone du tournoi s’éteint au signal d’arrêt. L’arbitre Jax est retrouvé mort. Les scanners ont gardé les traces des témoins restés dans l’arène.","rooms":["AABBBBCC","AAABBBCC","AAAABBCC","DAABBBCC","DDDDBBBC","DDEEBBBC","DDEEEEFF","DEEEEFFF"],"roomNames":{"A":"Vestiaire","B":"Cage","C":"Gradins","D":"Atelier","E":"Piste","F":"Loge"},"objects":{"0":"crate","2":"battery","4":"seat","7":"robot","9":"seat","14":"crate","15":"bench","18":"bench","20":"battery","24":"robot","28":"scanner","29":"bench","30":"seat","43":"bench","44":"robot","45":"crate","48":"battery","49":"bench","54":"crate","58":"scanner","59":"scanner","63":"seat"},"people":[{"id":"sia","name":"Sia","clue":"À côté d’une banquette, dans une pièce avec exactement deux scanners.","items":["bench","scanner"]},{"id":"kiro","name":"Kiro","clue":"À côté d’une batterie.","items":["battery"]},{"id":"alba","name":"Alba","clue":"Sur une banquette.","items":["bench"]},{"id":"sen","name":"Sen","clue":"Sur une banquette, dans une pièce avec un drone.","items":["bench","robot"]},{"id":"remi","name":"Remi","clue":"À côté d’un scanner.","items":["scanner"]},{"id":"ori","name":"Ori","clue":"Sur un fauteuil, dans une pièce avec une batterie.","items":["seat","battery"]},{"id":"lux","name":"Lux","clue":"Sur un fauteuil.","items":["seat"]},{"id":"jax","name":"Jax","clue":"À côté d’une banquette.","items":["bench"]}],"victim":"jax","solution":{"sia":51,"kiro":40,"alba":18,"sen":15,"remi":57,"ori":4,"lux":30,"jax":37},"hints":["Compare les fauteuils en repérant les salles équipées d’une batterie. Le relevé d’Ori n’en laisse qu’un.","Jax est le seul à pouvoir occuper l’une des rangées du milieu. Cherche près d’une banquette de la Cage.","Une fois Ori et Jax placés, la rangée qui traverse la banquette du Vestiaire n’a plus qu’une case compatible. Regarde le relevé d’Alba."]},
+  {"id":"19","title":"L’Ombre du Zénith","venue":"Héliostat","difficulty":"Intermédiaire","intro":"Un pic de courant traverse les miroirs d’Héliostat. Sal, qui contrôlait l’orientation des panneaux, est retrouvé mort. Les relevés des appareils ont survécu à la coupure.","rooms":["AAAAABBB","CAAAABBB","CCCCABBD","CECAABDD","CEEEABDD","EEEEFDDD","EEEFFDDD","EEFFFFDD"],"roomNames":{"A":"Vigie","B":"Onduleurs","C":"Champ","D":"Atelier","E":"Stock","F":"Repos"},"objects":{"3":"screen","6":"pallet","11":"rug","14":"screen","16":"rug","17":"bench","19":"bench","20":"terminal","27":"bench","29":"terminal","30":"bench","31":"bench","33":"bench","35":"rug","39":"pallet","43":"rug","44":"bench","46":"battery","48":"pallet","60":"rug","62":"battery"},"people":[{"id":"eli","name":"Eli","clue":"Sur un tapis, dans une pièce sans palette.","items":["rug","pallet"]},{"id":"uma","name":"Uma","clue":"Sur un tapis, à côté d’une banquette.","items":["rug","bench"]},{"id":"sato","name":"Sato","clue":"À côté d’une batterie.","items":["battery"]},{"id":"faye","name":"Faye","clue":"À côté d’un terminal.","items":["terminal"]},{"id":"jo","name":"Jo","clue":"À côté d’une palette.","items":["pallet"]},{"id":"mika","name":"Mika","clue":"À côté d’un tapis, dans une pièce sans palette.","items":["rug","pallet"]},{"id":"yori","name":"Yori","clue":"À côté d’un tapis.","items":["rug"]},{"id":"sal","name":"Sal","clue":"Sur une banquette.","items":["bench"]}],"victim":"sal","solution":{"eli":11,"uma":16,"sato":54,"faye":28,"jo":7,"mika":61,"yori":42,"sal":33},"hints":["Cherche un tapis qui touche une banquette sans cloison entre les deux. C’est le point de départ d’Uma.","Sur la rangée du haut, seul Jo a des cases possibles. Garde ses deux choix autour de la palette.","Observe la colonne de la banquette du Stock. Après Uma et la déduction sur Jo, seul Sal peut encore occuper cette colonne."],"spans":[{"type":"bench","cells":[30,31]}]},
+  {"id":"20","title":"Pression critique","venue":"Station Caldeira","difficulty":"Difficile","intro":"À Caldeira, une vanne cède et le circuit de secours reste fermé. Après la remise en service, Dario est retrouvé mort. Les appareils de la station ont gardé leurs relevés.","rooms":["AAAABBBB","AAAABBBB","CAAABBBB","CCCAABBD","CCCEEDDD","CCEEEDDF","CCEEEFFF","CCEEFFFF"],"roomNames":{"A":"Sas","B":"Turbines","C":"Contrôle","D":"Pompes","E":"Repos","F":"Forage"},"objects":{"6":"bench","7":"bench","8":"bed","10":"bed","11":"pod","12":"terminal","14":"scanner","21":"pod","23":"battery","24":"bed","25":"bench","28":"battery","30":"battery","32":"bed","33":"battery","36":"pod","46":"bed","48":"scanner","54":"scanner","60":"bench"},"people":[{"id":"nil","name":"Nil","clue":"Sur un lit.","items":["bed"]},{"id":"anouk","name":"Anouk","clue":"À côté d’un scanner.","items":["scanner"]},{"id":"bo","name":"Bo","clue":"Sur une banquette.","items":["bench"]},{"id":"zed","name":"Zed","clue":"Sur un lit, dans une pièce avec un caisson.","items":["bed","pod"]},{"id":"kora","name":"Kora","clue":"À côté d’une banquette.","items":["bench"]},{"id":"jiro","name":"Jiro","clue":"Sur un lit, dans une pièce sans scanner.","items":["bed","scanner"]},{"id":"neve","name":"Neve","clue":"À côté d’un caisson.","items":["pod"]},{"id":"dario","name":"Dario","clue":"À côté d’un terminal.","items":["terminal"]}],"victim":"dario","solution":{"nil":24,"anouk":49,"bo":7,"zed":10,"kora":61,"jiro":46,"neve":35,"dario":20},"hints":["Les deux lits possibles de Zed sont sur la même rangée. Cherche ensuite la rangée où seul le relevé d’Anouk est compatible.","Réserve les rangées de Zed et d’Anouk. Jiro n’a plus qu’un lit possible, ce qui resserre aussi les choix de Nil.","Le terminal fixe la pièce de Dario. La dernière case d’Anouk au Forage imposerait que Dario soit seul aux Turbines."],"spans":[{"type":"bench","cells":[6,7]}]},
+  {"id":"21","title":"Le Témoin effacé","venue":"Tribunal Verre","difficulty":"Difficile","intro":"La greffière Ana devait remettre une copie du procès à la presse. Quand l’audience reprend, elle est retrouvée morte et le dossier a disparu. Les scellés numériques ont conservé les mouvements du tribunal.","rooms":["AAABBBBB","AAABBBCC","DAABBCCC","DDAABCCC","DDEEBCCC","DDEEEFCC","DEEEEFFC","DEEEFFFF"],"roomNames":{"A":"Accueil","B":"Audience","C":"Greffe","D":"Scellés","E":"Conseil","F":"Archives"},"objects":{"6":"bench","7":"scanner","8":"seat","9":"bench","11":"seat","15":"scanner","19":"seat","27":"locker","28":"desk","30":"bench","32":"bench","38":"screen","40":"bench","41":"scanner","44":"scanner","46":"scanner","47":"bench","48":"seat","50":"bench","53":"scanner","58":"bench","59":"desk","60":"seat"},"people":[{"id":"ava","name":"Ava","clue":"À côté d’un scanner.","items":["scanner"]},{"id":"senn","name":"Senn","clue":"Sur un fauteuil.","items":["seat"]},{"id":"ilya","name":"Ilya","clue":"À côté d’un scanner, dans une pièce sans bureau.","items":["scanner","desk"]},{"id":"noor","name":"Noor","clue":"À côté d’un scanner, dans une pièce avec exactement deux scanners.","items":["scanner"]},{"id":"mako","name":"Mako","clue":"Sur une banquette, dans une pièce avec un écran.","items":["bench","screen"]},{"id":"liv","name":"Liv","clue":"Sur une banquette.","items":["bench"]},{"id":"teo","name":"Teo","clue":"À côté d’une banquette, dans une pièce sans bureau.","items":["bench","desk"]},{"id":"ana","name":"Ana","clue":"Sur une banquette, dans une pièce avec un scanner.","items":["bench","scanner"]}],"victim":"ana","solution":{"ava":52,"senn":11,"ilya":45,"noor":23,"mako":30,"liv":32,"teo":1,"ana":58},"hints":["Le Greffe est la pièce repérée par les indices de Noor et de Mako. Compare les colonnes de leurs cases possibles.","Noor et Mako se partagent deux colonnes. Barre ces colonnes pour les autres, puis examine la rangée du haut.","Quand il ne reste que les banquettes de Liv et d’Ana, vérifie laquelle laisserait Ana seule dans les Scellés."]},
+  {"id":"22","title":"Pollen clandestin","venue":"Serre Mnémosyne","difficulty":"Difficile","intro":"Une variété interdite fleurit pendant la fermeture du marché. Suze, qui l’avait brevetée sous un faux nom, est retrouvée morte dans la serre.","rooms":["AAAABBCC","AAABBBCC","DAABBCCC","DDABCCCC","DDDBBECC","DDDEEECC","DDDEEEFF","EEEEFFFF"],"roomNames":{"A":"Sas","B":"Culture","C":"Marché","D":"Stock","E":"Greffes","F":"Séchoir"},"objects":{"4":"bench","6":"crate","8":"scanner","11":"bench","17":"scanner","18":"scanner","19":"pallet","23":"counter","24":"scanner","26":"scanner","28":"rug","38":"pallet","39":"bench","40":"counter","41":"scanner","45":"rug","47":"counter","48":"scanner","50":"bench","58":"scanner","59":"bench","62":"rug"},"people":[{"id":"silo","name":"Silo","clue":"À côté d’une banquette, dans une pièce sans caisse.","items":["bench","crate"]},{"id":"iris","name":"Iris","clue":"Sur un tapis.","items":["rug"]},{"id":"nox","name":"Nox","clue":"Sur une banquette, dans une pièce avec un tapis.","items":["bench","rug"]},{"id":"esme","name":"Esme","clue":"Sur une banquette.","items":["bench"]},{"id":"rin","name":"Rin","clue":"À côté d’un scanner.","items":["scanner"]},{"id":"miel","name":"Miel","clue":"Sur un tapis, dans une pièce sans comptoir.","items":["rug","counter"]},{"id":"koa","name":"Koa","clue":"À côté d’exactement deux scanners.","items":["scanner"]},{"id":"suze","name":"Suze","clue":"À côté d’une banquette.","items":["bench"]}],"victim":"suze","solution":{"silo":42,"iris":28,"nox":39,"esme":11,"rin":16,"miel":62,"koa":49,"suze":5},"hints":["Regarde la rangée des deux scanners contigus du Sas. Seul Rin peut occuper cette rangée.","Si Suze est près de la banquette du Marché, quels choix perdent Iris et Nox ? Il doit rester une autre personne dans la pièce.","Une fois Rin et Koa au Stock, Suze ne peut plus s’y ajouter. Regarde les banquettes restantes dans la Culture."]},
+  {"id":"23","title":"Décollage à vide","venue":"Hangar Aéro 6","difficulty":"Difficile","intro":"Le taxi de Tavi décolle à vide après le couvre-feu. Son pilote est retrouvé mort avant la réouverture du hangar. Les relevés au sol sont encore lisibles.","rooms":["AAAAABBB","AAABBBBB","CAAABBBB","CCADDBBB","CCCDDBBB","CCCCDDDE","FFCDDEEE","FFFDDEEE"],"roomNames":{"A":"Douane","B":"Piste","C":"Atelier","D":"Fret","E":"Quais","F":"Repos"},"objects":{"1":"seat","2":"bench","6":"locker","8":"locker","10":"robot","11":"locker","13":"scanner","14":"seat","18":"bench","19":"bench","21":"bench","22":"locker","23":"pallet","25":"pallet","30":"robot","33":"bench","36":"pallet","38":"seat","46":"bench","51":"scanner","58":"seat","62":"pallet","63":"bench"},"people":[{"id":"luz","name":"Luz","clue":"À côté d’une banquette.","items":["bench"]},{"id":"nilo","name":"Nilo","clue":"À côté d’une palette.","items":["pallet"]},{"id":"vika","name":"Vika","clue":"À côté d’un scanner.","items":["scanner"]},{"id":"tao","name":"Tao","clue":"À côté d’une palette, dans une pièce avec un scanner.","items":["pallet","scanner"]},{"id":"mars","name":"Mars","clue":"Sur un fauteuil, dans une pièce avec un scanner.","items":["seat","scanner"]},{"id":"rom","name":"Rom","clue":"Sur un fauteuil.","items":["seat"]},{"id":"eda","name":"Eda","clue":"Sur un fauteuil, dans une pièce sans casier.","items":["seat","locker"]},{"id":"tavi","name":"Tavi","clue":"Sur une banquette.","items":["bench"]}],"victim":"tavi","solution":{"luz":45,"nilo":24,"vika":52,"tao":15,"mars":38,"rom":1,"eda":58,"tavi":19},"hints":["Pour Eda, élimine les fauteuils des pièces équipées d’un casier. Il reste une seule possibilité.","Après Eda, Mars et Rom se partagent deux colonnes. Réserve ces colonnes avant de relire les autres relevés.","Si Tavi est sur une banquette de la Piste, Mars est forcément avec lui. Vika ne peut alors pas se trouver près d’un scanner dans cette pièce."],"spans":[{"type":"bench","cells":[18,19]}]},
+  {"id":"24","title":"La Chute verticale","venue":"Tour Méridienne","difficulty":"Difficile","intro":"La Tour Méridienne perd son réseau pendant onze secondes. À la reprise, la dernière communication d’Orso tourne en boucle. Orso est retrouvé mort dans la tour.","rooms":["AAAABBCC","AAAABCCC","DAAABBCC","DDAEBBCC","DDEEEBFF","DEEEEEFF","DDDEEEFF","DDDDEFFF"],"roomNames":{"A":"Hall","B":"Paliers","C":"Vigie","D":"Suites","E":"Relais","F":"Sommet"},"objects":{"1":"antenna","2":"antenna","3":"screen","5":"bed","9":"bed","12":"table","14":"bed","21":"screen","25":"rug","26":"table","28":"bed","32":"rug","35":"bed","37":"antenna","45":"bed","46":"rug","54":"bed","55":"screen","58":"pod","59":"rug","61":"screen","62":"bed"},"people":[{"id":"maya","name":"Maya","clue":"À côté d’un lit, dans une pièce avec un écran.","items":["bed","screen"]},{"id":"sol","name":"Sol","clue":"Sur un lit, dans une pièce avec exactement deux lits.","items":["bed"]},{"id":"ezra","name":"Ezra","clue":"À côté d’un lit, dans une pièce avec exactement deux lits.","items":["bed"]},{"id":"fia","name":"Fia","clue":"À côté d’un caisson.","items":["pod"]},{"id":"kade","name":"Kade","clue":"Sur un tapis, dans une pièce sans caisson.","items":["rug","pod"]},{"id":"ione","name":"Ione","clue":"Sur un tapis.","items":["rug"]},{"id":"jun","name":"Jun","clue":"À côté d’un lit, dans une pièce sans antenne.","items":["bed","antenna"]},{"id":"orso","name":"Orso","clue":"Sur un lit.","items":["bed"]}],"victim":"orso","solution":{"maya":8,"sol":35,"ezra":20,"fia":50,"kade":46,"ione":25,"jun":63,"orso":5},"hints":["Les tapis des Suites sont dans la même pièce qu’un caisson. Écarte-les pour Kade.","Parmi les lits d’Orso, écarte ceux où personne ne pourrait le rejoindre sans conflit de rangée ou de colonne.","Si Sol prend le lit des Paliers sur la rangée du haut, Orso doit finir sur un lit du Relais. Vérifie alors si quelqu’un peut encore être avec lui."]},
+  {"id":"25","title":"Le Pacte Axiome","venue":"Siège Axiome","difficulty":"Difficile","intro":"Au siège d’Axiome, un accord de surveillance devait être signé. Quand l’antenne s’est rallumée, l’auditrice Oriel était morte. Les capteurs du mobilier ont conservé les derniers mouvements.","rooms":["AAABBBBB","AAAABBBB","CAAAABDD","CCCAABDD","CCCEEEDD","CCEEEEDD","FFEEEDDD","FFEEEEDD"],"roomNames":{"A":"Atrium","B":"Toit","C":"Archives","D":"Pilotage","E":"Cœur","F":"Sas"},"objects":{"10":"antenna","12":"antenna","14":"bench","21":"rug","22":"antenna","25":"bench","26":"rug","28":"rug","32":"bench","35":"counter","36":"counter","38":"rug","39":"bench","41":"antenna","44":"seat","45":"bench","46":"seat","49":"bench","53":"antenna","59":"rug","61":"rug"},"spans":[{"type":"counter","cells":[35,36]}],"people":[{"id":"aube","name":"Aube","clue":"Sur un tapis.","items":["rug"]},{"id":"sven","name":"Sven","clue":"À côté d’un tapis, dans la même pièce que Nym.","items":["rug"]},{"id":"lux","name":"Lux","clue":"À côté d’une banquette, dans une pièce avec un tapis.","items":["bench","rug"]},{"id":"nym","name":"Nym","clue":"À côté du comptoir, dans une pièce avec un fauteuil.","items":["counter","seat"]},{"id":"cleo","name":"Cléo","clue":"À côté d’une antenne, sans comptoir à côté.","items":["antenna","counter"]},{"id":"merle","name":"Merle","clue":"À côté d’un fauteuil, dans une pièce sans comptoir.","items":["seat","counter"]},{"id":"zed","name":"Zed","clue":"Sur une banquette.","items":["bench"]},{"id":"oriel","name":"Oriel","clue":"À côté d’une banquette, dans une pièce sans comptoir.","items":["bench","counter"]}],"victim":"oriel","solution":{"aube":21,"sven":60,"lux":24,"nym":43,"cleo":2,"merle":38,"zed":49,"oriel":15},"hints":["Le comptoir fixe la pièce de Nym. Cherche les tapis que Sven peut longer dans cette même pièce.","Dans les configurations qui respectent les indices de mobilier, Oriel se retrouve seule si elle est aux Archives ou au Sas. Il reste le toit.","Sur le toit, Oriel ne peut avoir qu’une seule personne avec elle. Cherche une antenne dans l’Atrium pour que Cléo n’occupe pas le toit."]}
 ];
 const objectTypes = {
   seat: {
@@ -570,7 +709,8 @@ const objectTypes = {
   },
   bench: {
     name: "Banquette", occupiable: true,
-    art: '<rect x="3" y="9" width="34" height="22" rx="5" fill="#713355"/><path d="M7 15h26v10H7z" fill="#ff9bc9"/><path d="M7 10v19m26-19v19M20 15v10" stroke-width="1.4"/><path d="M8 32v2m24-2v2"/>'
+    art: '<rect x="3" y="9" width="34" height="22" rx="5" fill="#713355"/><path d="M7 15h26v10H7z" fill="#ff9bc9"/><path d="M7 10v19m26-19v19M20 15v10" stroke-width="1.4"/><path d="M8 32v2m24-2v2"/>',
+    wide: '<rect x="3" y="8" width="74" height="23" rx="6" fill="#713355"/><path d="M8 14h64v12H8z" fill="#ff9bc9"/><path d="M8 9v20m64-20v20M24 14v12m16-12v12m16-12v12" stroke-width="1.4"/><path d="M9 32v3m62-3v3"/>'
   },
   rug: {
     name: "Tapis", occupiable: true,
@@ -591,10 +731,81 @@ const objectTypes = {
   speaker: {
     name: "Enceinte", occupiable: false,
     art: '<rect x="10" y="3" width="20" height="34" rx="3" fill="#362b50"/><circle cx="20" cy="13" r="4" fill="#fab8e7"/><circle cx="20" cy="25" r="7" fill="#c49df9"/><circle cx="20" cy="25" r="3" fill="#f9d0ff"/><path d="M13 35h14" stroke="#c49df9" stroke-width="1.3"/>'
+  },
+  mixer: {
+    name: "Table de mixage", occupiable: false,
+    art: '<rect x="3" y="8" width="34" height="24" rx="3" fill="#2c2543"/><circle cx="12" cy="20" r="6" fill="#f5a4d4"/><circle cx="28" cy="20" r="6" fill="#8fe9df"/><path d="M12 17v6m16-6v6" stroke="#452a53"/><path d="M20 13v14m-2-8h4" stroke="#edfa85"/>'
+  },
+  counter: {
+    name: "Comptoir", occupiable: false,
+    art: '<path d="M5 29h30v5H5z" fill="#633d45"/><rect x="3" y="10" width="34" height="20" rx="2" fill="#ffb278"/><path d="M3 25h34M11 15h6v5h-6zm13 0h6v5h-6z" fill="#ffe4b0"/>',
+    wide: '<path d="M4 30h72v5H4z" fill="#633d45"/><rect x="3" y="9" width="74" height="22" rx="3" fill="#ffb278"/><path d="M3 26h74M11 14h10v7H11zm24 0h10v7H35zm24 0h10v7H59z" fill="#ffe4b0"/>'
+  },
+  crate: {
+    name: "Caisse", occupiable: false,
+    art: '<rect x="6" y="6" width="28" height="28" rx="2" fill="#ffbe79"/><path d="M10 10h20v20H10z" fill="#b06949"/><path d="m10 10 20 20m0-20L10 30" stroke="#f8c894" stroke-width="3"/><path d="M15 7h10" stroke="#fff0cc"/>'
+  },
+  pallet: {
+    name: "Palette", occupiable: false,
+    art: '<path d="M5 6v28m30-28v28" stroke="#704d44" stroke-width="4"/><path d="M3 7h34v6H3zm0 10h34v6H3zm0 10h34v6H3z" fill="#f7c397"/><path d="M8 10h1m22 10h1M8 30h1" stroke-width="1.5"/>'
+  },
+  scanner: {
+    name: "Scanner", occupiable: false,
+    art: '<rect x="4" y="9" width="32" height="23" rx="5" fill="#f0edeb"/><rect x="9" y="13" width="22" height="14" rx="3" fill="#6bd7ed"/><path d="M13 15v10m4-10v10m4-10v10m4-10v10" stroke="#315a73" stroke-width="1.4"/><circle cx="31" cy="29" r="1.2" fill="#7b9b66"/>'
+  },
+  pod: {
+    name: "Caisson", occupiable: false,
+    art: '<rect x="9" y="3" width="22" height="34" rx="10" fill="#446177"/><rect x="13" y="7" width="14" height="21" rx="6" fill="#a6efb6"/><path d="M17 10v12m1 10h4" stroke="#f8ffea" stroke-width="2"/>'
+  },
+  antenna: {
+    name: "Antenne", occupiable: false,
+    art: '<circle cx="20" cy="20" r="13" fill="#8f8cce"/><path d="M9 12a13 13 0 0 0 19 19L9 12z" fill="#c4c8f4"/><path d="m18 22 11-11m-8 13v10m-6 0h12" fill="none"/><circle cx="29" cy="11" r="3" fill="#eeff87"/>'
+  },
+  battery: {
+    name: "Batterie", occupiable: false,
+    art: '<path d="M14 5h12v4H14z" fill="#cee1ed"/><rect x="10" y="9" width="20" height="27" rx="3" fill="#557f5c"/><path d="M22 13l-8 10h6l-2 8 9-12h-6z" fill="#edff84" stroke-width="1"/>'
+  },
+  robot: {
+    name: "Drone", occupiable: false,
+    art: '<path d="m9 10 22 20m0-20L9 30" stroke="#6f86a4" stroke-width="5"/><circle cx="8" cy="9" r="5" fill="#d7e2f2"/><circle cx="32" cy="9" r="5" fill="#d7e2f2"/><circle cx="8" cy="31" r="5" fill="#d7e2f2"/><circle cx="32" cy="31" r="5" fill="#d7e2f2"/><path d="M20 12l8 8-8 8-8-8z" fill="#ec85a5"/><circle cx="20" cy="20" r="2.5" fill="#ffecb7"/>'
+  },
+  desk: {
+    name: "Bureau", occupiable: false,
+    art: '<rect x="4" y="8" width="32" height="23" rx="2" fill="#c18fe2"/><path d="M5 25h30M27 10v20M9 14h13v7H9zm21 2h3" fill="#ffe4f5" stroke-width="1.5"/><path d="M7 32v3m26-3v3"/>'
+  },
+  locker: {
+    name: "Casier", occupiable: false,
+    art: '<rect x="7" y="4" width="26" height="32" rx="2" fill="#659bbb"/><path d="M11 8h18v24H11z" fill="#c7e8e9"/><path d="M15 11h10m-10 3h10m-10 3h10m-2 7h3" stroke-width="1.5"/>'
+  },
+  bed: {
+    name: "Lit", occupiable: true,
+    art: '<rect x="8" y="3" width="24" height="34" rx="3" fill="#556875"/><rect x="11" y="6" width="18" height="8" rx="2" fill="#fffbec"/><rect x="11" y="15" width="18" height="19" rx="2" fill="#f4b2a0"/><path d="M11 20h18" stroke="#965b65"/>'
+  },
+  table: {
+    name: "Table", occupiable: false,
+    art: '<circle cx="20" cy="21" r="15" fill="#936969"/><circle cx="20" cy="19" r="14" fill="#f2ca94"/><path d="m13 15 4 4-4 4-4-4z" fill="#e591a6"/><circle cx="25" cy="19" r="3" fill="#addfed"/>'
   }
 };
 const personColors = ["#9cf6e4", "#ffcb84", "#ffb2d9", "#beb7ff", "#f4ea83", "#b8ec94", "#a9d4ff", "#ff9c9b"];
-const storageKey = "neon-noir-dossiers-v2";
+const portraitShapes = [
+  '<path d="M6 24v-4l4-3h8l4 3v4zM8 12V7l5-4 6 2 2 6-3 6h-8z" fill="#142537"/><path d="M9 10h10l-1 4H10z" fill="#92fff0"/>',
+  '<path d="M5 24v-3l5-4h8l5 4v3zM8 12V5l10-2 3 4-4 3v5l-4 3-4-4z" fill="#402740"/><path d="M11 11h7m-5 4h3" stroke="#ffd996" stroke-width="1.6"/>',
+  '<path d="M5 24v-4l4-3-2-5 2-6 5-3 6 3 2 6-3 5 4 3v4z" fill="#471e42"/><path d="M10 10l4-3 4 3v6h-8z" fill="#ffcae0"/><path d="M11 12h6" stroke="#471e42" stroke-width="1.7"/>',
+  '<path d="M5 24v-4l5-3h8l5 3v4zM8 9l3-5h6l4 5v6l-4 3h-6l-3-3z" fill="#2b2053"/><path d="M8 10h13v3H8z" fill="#e5e0ff"/><circle cx="17" cy="11.5" r="1.2" fill="#2b2053"/>',
+  '<path d="M5 24v-5l5-3h8l5 3v5zM8 9l4-5 7 2 1 6-3 5h-6l-3-4z" fill="#423a28"/><path d="M9 11h5m2 0h4" stroke="#fff4af" stroke-width="2"/><path d="M11 21h6" stroke="#fff4af" stroke-width="1.6"/>',
+  '<path d="M6 24v-4l4-3h8l4 3v4zM9 10V7l2-3 4 2 4-2 2 5-2 7-4 2-4-2z" fill="#263f3b"/><path d="M10 10l4 2 5-2-1 5h-7z" fill="#d2ffac"/>',
+  '<path d="M5 24v-4l5-3h8l5 3v4zM8 9l2-5 4 2 4-2 3 5-2 7-4 2-5-2z" fill="#243a59"/><path d="M10 11h9m-8 3h7" stroke="#b9eaff" stroke-width="1.6"/>'
+];
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+const effects = new WeakMap();
+const gestures = {
+  choose: [{ transform: "scale(.87)" }, { transform: "scale(1.16)", offset: .55 }, { transform: "scale(1)" }],
+  deposit: [{ transform: "scale(.45) translateY(-8px)", opacity: .25 }, { transform: "scale(1.18)", opacity: 1, offset: .63 }, { transform: "scale(1)", opacity: 1 }],
+  reveal: [{ transform: "translateY(5px)", opacity: .35 }, { transform: "translateY(0)", opacity: 1 }],
+  note: [{ transform: "scale(.3) rotate(-18deg)", opacity: .2 }, { transform: "scale(1.12) rotate(0deg)", opacity: 1, offset: .7 }, { transform: "scale(1)", opacity: 1 }],
+  reject: [{ transform: "translateX(0)" }, { transform: "translateX(-4px)" }, { transform: "translateX(3px)" }, { transform: "translateX(-2px)" }, { transform: "translateX(0)" }]
+};
+const storageKey = "neon-noir-cyberpunk-s1";
 const byId = id => document.getElementById(id);
 const board = byId("board");
 const roster = byId("roster");
@@ -611,9 +822,45 @@ let checked;
 let solved;
 let hintIndex;
 let roomIds;
-let roomStamps;
+let furnitureSpans;
 let cells;
 let portraits;
+
+function moveOnce(element, gesture, duration = 280, delay = 0) {
+  if (reduceMotion.matches || !element.animate) return;
+  effects.get(element)?.cancel();
+  effects.set(element, element.animate(gestures[gesture], {
+    duration, delay, easing: "cubic-bezier(.18,.7,.3,1)"
+  }));
+}
+
+function beam(element, parent) {
+  element.setAttribute("aria-hidden", "true");
+  element.addEventListener("animationend", () => element.remove(), { once: true });
+  parent.append(element);
+}
+
+function scanPlan() {
+  if (reduceMotion.matches) return;
+  const layer = make("span", "board-fx");
+  layer.setAttribute("aria-hidden", "true");
+  const scan = make("span", "scan-beam");
+  scan.addEventListener("animationend", () => layer.remove(), { once: true });
+  layer.append(scan);
+  board.append(layer);
+}
+
+function pulseLines(index) {
+  if (reduceMotion.matches) return;
+  const r = row(index) + 1;
+  const c = col(index) + 1;
+  const horizontal = make("span", "line-beam");
+  const vertical = make("span", "line-beam column");
+  horizontal.style.gridArea = r + " / 1 / " + (r + 1) + " / 9";
+  vertical.style.gridArea = "1 / " + c + " / 9 / " + (c + 1);
+  beam(horizontal, board);
+  beam(vertical, board);
+}
 
 function readSaved() {
   try {
@@ -640,21 +887,33 @@ function make(tag, className, text) {
   return el;
 }
 
-function glyph(type) {
+function glyph(type, wide = false) {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 40 40");
+  const artwork = objectTypes[type];
+  svg.setAttribute("viewBox", wide ? "0 0 80 40" : "0 0 40 40");
   svg.setAttribute("aria-hidden", "true");
   svg.setAttribute("stroke", "#121a28");
   svg.setAttribute("stroke-width", "2");
   svg.setAttribute("stroke-linejoin", "round");
   svg.setAttribute("stroke-linecap", "round");
-  svg.innerHTML = objectTypes[type].art;
+  svg.innerHTML = wide ? artwork.wide : artwork.art;
+  return svg;
+}
+
+function portraitMark(index, victim) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 28 28");
+  svg.setAttribute("aria-hidden", "true");
+  svg.innerHTML = victim
+    ? '<path d="M14 3l10 11-10 11L4 14z" fill="#472337"/><path d="m10 10 4 9 4-9" fill="none" stroke="#ffe5e1" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>'
+    : portraitShapes[index % portraitShapes.length];
   return svg;
 }
 
 function row(cell) { return Math.floor(cell / 8); }
 function col(cell) { return cell % 8; }
 function room(cell) { return currentCase.rooms[row(cell)][col(cell)]; }
+function floorIndex(id) { return (roomIds.indexOf(id) + Number(currentCase.id) - 1) % 6; }
 function objectAt(cell) { return objectTypes[currentCase.objects[cell]]; }
 function person(id) { return currentCase.people.find(item => item.id === id); }
 function personIndex(id) { return currentCase.people.findIndex(item => item.id === id); }
@@ -674,9 +933,9 @@ function setStatus(text, kind) {
 
 function roomKey() {
   const fragment = document.createDocumentFragment();
-  for (const [i, id] of roomIds.entries()) {
+  for (const id of roomIds) {
     const chip = make("span", "room-chip");
-    chip.append(make("b", "floor-" + i, id), document.createTextNode(currentCase.roomNames[id]));
+    chip.append(make("b", "floor-" + floorIndex(id), id), document.createTextNode(currentCase.roomNames[id]));
     fragment.append(chip);
   }
   return fragment;
@@ -693,12 +952,7 @@ function loadCase(item) {
   noteMode = false;
   checked = false;
   roomIds = Object.keys(item.roomNames);
-  const map = item.rooms.join("");
-  roomStamps = new Map(roomIds.map(id => {
-    const index = [...map].findIndex((value, at) => value === id && !objectAt(at));
-    return [index === -1 ? map.indexOf(id) : index, id];
-  }));
-  byId("case-number").textContent = " / " + item.id;
+  byId("case-number").textContent = " " + item.id + "/25";
   byId("case-title").textContent = item.title;
   byId("plan-title").textContent = item.venue + " · 8 × 8";
   byId("brief-difficulty").textContent = "Dossier " + item.id + " · " + item.difficulty;
@@ -708,26 +962,59 @@ function loadCase(item) {
   buildBoard();
   buildRoster();
   render();
+  scanPlan();
   save();
+}
+
+function placeOverlay(overlay, start, width) {
+  const r = row(start) + 1;
+  const c = col(start) + 1;
+  overlay.style.gridArea = r + " / " + c + " / " + (r + 1) + " / " + (c + width);
+  overlay.setAttribute("aria-hidden", "true");
+}
+
+function buildRoomPlaque(id) {
+  const name = currentCase.roomNames[id];
+  const desired = name.length > 3 ? 2 : 1;
+  let best = { index: currentCase.rooms.join("").indexOf(id), span: 1, score: -1 };
+  for (let index = 0; index < 64; index++) {
+    if (room(index) !== id) continue;
+    let span = 1;
+    while (span < desired && col(index) + span < 8 && room(index + span) === id) span++;
+    let objectsInRun = 0;
+    for (let i = 0; i < span; i++) objectsInRun += Number(Boolean(objectAt(index + i)));
+    const topWall = row(index) === 0 || room(index - 8) !== id;
+    const leftWall = col(index) === 0 || room(index - 1) !== id;
+    const score = span * 100 - objectsInRun * 20 + Number(topWall) * 10 + Number(leftWall);
+    if (score > best.score) best = { index, span, score };
+  }
+  const plaque = make("span", "room-plaque floor-" + floorIndex(id), name);
+  placeOverlay(plaque, best.index, best.span);
+  plaque.style.setProperty("--plaque-size", Math.min(2.45, (12.5 * best.span - 3) / (.78 * name.length)) + "cqw");
+  for (let i = 0; i < best.span; i++) cells[best.index + i].button.classList.add("plaque-tile");
+  return plaque;
 }
 
 function buildBoard() {
   const fragment = document.createDocumentFragment();
+  const spans = currentCase.spans || [];
+  const spannedCells = new Set(spans.flatMap(span => span.cells));
   cells = Array.from({ length: 64 }, (_, index) => {
-    const button = make("button", "cell floor-" + roomIds.indexOf(room(index)));
+    const button = make("button", "cell floor-" + floorIndex(room(index)));
     button.type = "button";
     if (col(index) < 7 && room(index + 1) !== room(index)) button.style.setProperty("--wall-right", "3px");
     if (row(index) < 7 && room(index + 8) !== room(index)) button.style.setProperty("--wall-bottom", "3px");
     const type = currentCase.objects[index];
     const object = objectAt(index);
     if (object) {
-      const art = make("span", "object");
-      art.append(glyph(type));
-      button.append(art);
+      if (!spannedCells.has(index)) {
+        const art = make("span", "object");
+        art.append(glyph(type));
+        button.append(art);
+      }
       button.classList.add("has-object");
       button.title = object.name + (object.occupiable ? " · peut être occupé" : " · obstacle");
     }
-    if (roomStamps.has(index)) button.append(make("span", "room-stamp", roomStamps.get(index)));
     const note = make("span", "note", "×");
     const token = make("span", "token");
     note.setAttribute("aria-hidden", "true");
@@ -737,6 +1024,14 @@ function buildBoard() {
     fragment.append(button);
     return { button, token };
   });
+  furnitureSpans = spans.map(({ type, cells: footprint }) => {
+    const art = make("span", "furniture-span");
+    placeOverlay(art, footprint[0], footprint.length);
+    art.append(glyph(type, true));
+    fragment.append(art);
+    return { art, type };
+  });
+  for (const id of roomIds) fragment.append(buildRoomPlaque(id));
   board.replaceChildren(fragment);
 }
 
@@ -747,21 +1042,32 @@ function buildRoster() {
     const button = make("button", "person" + (victim ? " victim" : ""));
     button.type = "button";
     button.style.setProperty("--person", personColors[i]);
-    button.append(make("span", "portrait", victim ? "V" : initials(p.name)), make("span", "person-name", p.name));
-    button.addEventListener("click", () => {
-      selected = p.id;
-      noteMode = false;
-      render();
-    });
+    const portrait = make("span", "portrait");
+    portrait.append(portraitMark(i, victim));
+    button.append(portrait, make("span", "person-name", p.name));
+    button.addEventListener("click", () => selectPerson(p.id));
     fragment.append(button);
     return button;
   });
   roster.replaceChildren(fragment);
 }
 
+function signalSelection() {
+  moveOnce(portraits[personIndex(selected)].querySelector(".portrait"), "choose");
+  moveOnce(byId("clue-text").parentElement, "reveal", 240);
+}
+
+function selectPerson(id) {
+  selected = id;
+  noteMode = false;
+  render();
+  signalSelection();
+}
+
 function render() {
   const active = person(selected);
   const isPlaced = placements[selected] !== undefined;
+  for (const { art, type } of furnitureSpans) art.classList.toggle("object-focus", active.items.includes(type));
   for (const [index, { button, token }] of cells.entries()) {
     const owner = ownerAt(index);
     const occupant = owner && person(owner);
@@ -795,8 +1101,13 @@ function render() {
   }
   byId("clue-name").textContent = active.name + (selected === currentCase.victim ? " · Victime" : "");
   byId("clue-state").textContent = isPlaced ? "· placé" : "· à placer";
-  byId("clue-glyphs").replaceChildren(...active.items.map(glyph));
-  byId("clue-text").textContent = active.clue;
+  const clue = byId("clue-text");
+  const clueKey = currentCase.id + "/" + selected;
+  if (clue.dataset.key !== clueKey) {
+    byId("clue-glyphs").replaceChildren(...active.items.map(type => glyph(type)));
+    clue.textContent = active.clue;
+    clue.dataset.key = clueKey;
+  }
   byId("remove").disabled = !isPlaced;
   byId("notes").setAttribute("aria-pressed", String(noteMode));
   setStatus(solved ? "Affaire résolue · 8 / 8 placés" : "");
@@ -807,31 +1118,37 @@ function useCell(index) {
   if (noteMode) {
     if (owner || objectAt(index)?.occupiable === false) {
       setStatus("Cette case est indisponible.", "bad");
+      moveOnce(cells[index].button, "reject", 235);
       return;
     }
     if (notes.has(index)) notes.delete(index); else notes.add(index);
-  } else {
-    if (owner) {
-      selected = owner;
-      render();
-      return;
-    }
-    if (objectAt(index)?.occupiable === false) {
-      setStatus(objectAt(index).name + " · case impraticable.", "bad");
-      return;
-    }
-    if (blocks(index, selected)) {
-      setStatus("Rangée ou colonne occupée.", "bad");
-      return;
-    }
-    const moving = placements[selected] !== undefined;
-    placements[selected] = index;
-    notes.delete(index);
-    checked = false;
-    solved = false;
-    if (!moving) selected = currentCase.people.find(p => placements[p.id] === undefined)?.id || selected;
+    render();
+    if (notes.has(index)) moveOnce(cells[index].button.querySelector(".note"), "note", 340);
+    save();
+    return;
   }
+  if (owner) {
+    selectPerson(owner);
+    return;
+  }
+  const object = objectAt(index);
+  if (object?.occupiable === false || blocks(index, selected)) {
+    setStatus(object?.occupiable === false ? object.name + " · case impraticable." : "Rangée ou colonne occupée.", "bad");
+    moveOnce(cells[index].button, "reject", 235);
+    return;
+  }
+  const who = selected;
+  const moving = placements[who] !== undefined;
+  placements[who] = index;
+  notes.delete(index);
+  checked = false;
+  solved = false;
+  if (!moving) selected = currentCase.people.find(p => placements[p.id] === undefined)?.id || who;
   render();
+  pulseLines(index);
+  moveOnce(cells[index].token, "deposit", 375);
+  moveOnce(portraits[personIndex(who)].querySelector(".portrait"), "choose", 320);
+  if (selected !== who) signalSelection();
   save();
 }
 
@@ -840,6 +1157,7 @@ function openDialog(title, content) {
   dialogBody.replaceChildren(content);
   dialog.scrollTop = 0;
   if (!dialog.open) dialog.showModal();
+  else moveOnce(dialogBody, "reveal", 240);
 }
 
 function action(label, handler, primary) {
@@ -850,8 +1168,28 @@ function action(label, handler, primary) {
 }
 
 function openLevels() {
+  showLevelPage(Math.floor(cases.indexOf(currentCase) / 5));
+}
+
+function showLevelPage(page, restoreFocus = false) {
+  const body = make("div");
+  const solvedCount = cases.filter(item => saved[item.id]?.solved).length;
+  body.append(make("p", "season-progress", solvedCount + " / " + cases.length + " dossiers résolus"));
+  const pages = make("div", "case-pages");
+  pages.setAttribute("role", "group");
+  pages.setAttribute("aria-label", "Groupes de dossiers");
+  let activePage;
+  for (let start = 0; start < cases.length; start += 5) {
+    const group = start / 5;
+    const end = Math.min(start + 4, cases.length - 1);
+    const button = action(cases[start].id + "–" + cases[end].id, () => showLevelPage(group, true));
+    button.setAttribute("aria-pressed", String(group === page));
+    if (group === page) activePage = button;
+    pages.append(button);
+  }
+  body.append(pages);
   const list = make("div", "level-list");
-  for (const item of cases) {
+  for (const item of cases.slice(page * 5, page * 5 + 5)) {
     const button = make("button", "level");
     button.type = "button";
     button.setAttribute("aria-current", String(item.id === currentCase.id));
@@ -867,7 +1205,9 @@ function openLevels() {
     });
     list.append(button);
   }
-  openDialog("Les six dossiers", list);
+  body.append(list);
+  openDialog("Saison Cyberpunk", body);
+  if (restoreFocus) activePage.focus();
 }
 
 function openLegend() {
@@ -888,6 +1228,9 @@ function openLegend() {
     if (key.children.length) body.append(key);
   }
   body.append(make("p", "", "« À côté » veut dire que les deux cases partagent un bord dans la même pièce."));
+  if (currentCase.spans?.length) {
+    body.append(make("p", "", "Un meuble qui couvre deux cases compte une seule fois. Ses deux cases peuvent servir de repère pour un indice."));
+  }
   openDialog("Objets et pièces", body);
 }
 
@@ -911,7 +1254,7 @@ function openRules() {
   for (const text of [
     "Place les huit personnages, victime comprise. Chaque rangée et chaque colonne accueille une seule personne.",
     "Deux cases sont « à côté » si elles partagent un bord et appartiennent à la même pièce. Les cloisons et les diagonales coupent le voisinage.",
-    "On peut occuper un fauteuil, une banquette ou un tapis. Les autres objets bloquent leur case.",
+    "La légende distingue les objets sur lesquels on peut se placer des obstacles qui bloquent leur case.",
     "Choisis un personnage pour afficher son indice. Même barré, il reste sélectionnable pour être déplacé ou retiré.",
     "La victime et le coupable étaient seuls dans la même pièce. Quand le plan est juste, tu peux porter une accusation."
   ]) rules.append(make("li", "", text));
@@ -952,8 +1295,19 @@ function openAccusation() {
     p.id !== currentCase.victim && room(placements[p.id]) === victimRoom);
   const body = make("div");
   if (solved) {
+    body.append(make("div", "verdict-banner", "DOSSIER " + currentCase.id + " CLASSÉ"));
     body.append(make("p", "", culprit.name + " était la seule autre personne dans la pièce de la victime (" +
-      currentCase.roomNames[victimRoom] + ")."), action("Voir les dossiers", openLevels, true));
+      currentCase.roomNames[victimRoom] + ")."));
+    const controls = make("div", "dialog-actions");
+    const next = cases[cases.indexOf(currentCase) + 1];
+    if (next) {
+      controls.append(action("Dossier suivant", () => {
+        loadCase(next);
+        dialog.close();
+      }, true));
+    }
+    controls.append(action("Voir les dossiers", openLevels, !next));
+    body.append(controls);
     openDialog("Affaire résolue", body);
     return;
   }
@@ -981,6 +1335,7 @@ function checkBoard() {
   const remaining = currentCase.people.filter(p => placements[p.id] === undefined).length;
   if (remaining) {
     setStatus("Encore " + remaining + (remaining === 1 ? " personnage à placer." : " personnages à placer."), "bad");
+    moveOnce(status, "reject", 235);
     return;
   }
   checked = true;
@@ -988,6 +1343,7 @@ function checkBoard() {
   render();
   const wrong = currentCase.people.filter(p => placements[p.id] !== currentCase.solution[p.id]).length;
   if (wrong) {
+    for (const { button, token } of cells) if (button.classList.contains("wrong")) moveOnce(token, "reject", 270);
     setStatus(wrong + (wrong === 1 ? " pose à revoir." : " poses à revoir."), "bad");
     return;
   }
