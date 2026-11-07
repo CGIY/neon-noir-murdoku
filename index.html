@@ -17,13 +17,21 @@
     --acid: #e8ff64;
     --cyan: #91f7e6;
     --pink: #ff9bc9;
+    --panel-fill: linear-gradient(165deg, #29364d, #1a2436 74%);
+    --lime-fill: linear-gradient(135deg, #f4ffad, #dcf969);
+    --edge-light: inset 0 1px 0 #ffffff17, 0 2px 4px #080d1880;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     color: var(--paper);
-    background: radial-gradient(ellipse at top, #26364c, transparent 75%), var(--ink);
+    background:
+      radial-gradient(ellipse at 8% 0%, #1b494b85, transparent 58%),
+      radial-gradient(ellipse at 100% 32%, #512c5b55, transparent 52%),
+      linear-gradient(#9bdaf708 1px, transparent 1px) 0 0 / 24px 24px,
+      linear-gradient(90deg, #9bdaf708 1px, transparent 1px) 0 0 / 24px 24px,
+      var(--ink);
   }
   button { font: inherit; cursor: pointer; touch-action: manipulation; }
   button:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; z-index: 4; }
@@ -49,7 +57,8 @@
     justify-content: space-between;
     gap: 8px;
     padding-bottom: 5px;
-    border-bottom: 2px solid var(--acid);
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(90deg, var(--cyan), var(--acid) 48%, #8d548e 100%) 1;
   }
   .masthead h1 {
     margin: 1px 0 0;
@@ -66,19 +75,28 @@
   }
   .series { color: var(--acid); white-space: nowrap; }
   .series .slashes { color: var(--pink); }
+  #case-number {
+    margin-inline-start: 3px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: #b0fae51a;
+    color: var(--cyan);
+    font-variant-numeric: tabular-nums;
+  }
   .head-actions { display: flex; align-items: center; gap: 5px; }
   .pill {
     min-height: 38px;
     padding: 0 9px;
     border: 1px solid var(--line);
-    border-radius: 5px;
-    background: var(--surface);
+    border-radius: 7px;
+    background: var(--panel-fill);
+    box-shadow: var(--edge-light);
     color: var(--paper);
     font-size: .73rem;
     font-weight: 800;
     white-space: nowrap;
   }
-  .pill.dossiers { color: var(--ink); background: var(--acid); border-color: var(--acid); }
+  .pill.dossiers { color: var(--cyan); background: #233a44; border-color: #608e8c; }
   .meta {
     grid-area: meta;
     display: flex;
@@ -117,9 +135,20 @@
     width: min(100%, calc(100dvh - 276px), 560px);
     min-width: min(100%, 200px);
     aspect-ratio: 1;
-    border: 3px solid var(--paper);
-    box-shadow: 0 0 0 1px #0a0e17, 0 4px 16px #0a0e1788;
+    border: 3px solid #d3e4dd;
+    box-shadow: 0 0 0 1px #192738, 0 0 18px #63dcca20, 0 8px 18px #080e1ac0;
   }
+  .board::before, .board::after {
+    content: "";
+    position: absolute;
+    z-index: 6;
+    width: 14px;
+    height: 14px;
+    border-style: solid;
+    pointer-events: none;
+  }
+  .board::before { inset: -6px auto auto -6px; border-width: 2px 0 0 2px; border-color: var(--cyan); }
+  .board::after { inset: auto -6px -6px auto; border-width: 0 2px 2px 0; border-color: var(--pink); }
   @supports (width: 1cqh) {
     .board { width: min(100cqw, 100cqh, 560px); }
   }
@@ -280,12 +309,18 @@
     align-content: center;
     gap: 3px;
     padding: 3px 0;
-    border-radius: 5px;
+    border-radius: 7px;
     border: 1px solid var(--line);
-    background: var(--surface);
+    background: var(--panel-fill);
+    box-shadow: var(--edge-light);
     color: var(--paper);
   }
-  .person[aria-pressed="true"] { color: var(--ink); background: var(--acid); border-color: var(--acid); }
+  .person[aria-pressed="true"] {
+    color: var(--ink);
+    background: var(--lime-fill);
+    border-color: #f4ffb0;
+    box-shadow: inset 0 1px #ffffffe0, 0 0 9px #e8ff6438;
+  }
   .portrait {
     position: relative;
     display: grid;
@@ -311,7 +346,7 @@
   }
   .person.placed .person-name {
     text-decoration: line-through;
-    text-decoration-thickness: 2px;
+    text-decoration-thickness: 1px;
   }
   .person.placed .portrait::after {
     content: "✓";
@@ -338,9 +373,10 @@
     gap: 4px;
     padding: 5px 9px 7px;
     border-left: 4px solid var(--pink);
-    border-radius: 2px 6px 6px 2px;
+    border-radius: 3px 8px 8px 3px;
     color: var(--ink);
-    background: var(--paper);
+    background: linear-gradient(145deg, #fff9ec, #ede9db);
+    box-shadow: inset 0 1px #ffffffd0, 0 3px 11px #090e1a70;
   }
   .clue-header {
     display: flex;
@@ -348,6 +384,7 @@
     justify-content: space-between;
     gap: 5px;
     min-height: 24px;
+    background: linear-gradient(90deg, #59637742 50%, transparent 50%) 0 100% / 6px 1px repeat-x;
   }
   .clue-title { font-weight: 900; font-size: .77rem; }
   .clue-title .technical { font-size: .57rem; color: #465066; }
@@ -380,8 +417,9 @@
     gap: 5px;
     padding: 3px;
     border: 1px solid var(--line);
-    border-radius: 5px;
-    background: var(--surface);
+    border-radius: 7px;
+    background: var(--panel-fill);
+    box-shadow: var(--edge-light);
     color: var(--paper);
     font-size: .78rem;
     font-weight: 850;
@@ -389,7 +427,8 @@
   }
   .tool svg { width: 15px; height: 15px; }
   .tool[aria-pressed="true"] { background: var(--pink); color: var(--ink); border-color: var(--pink); }
-  .tool.primary { background: var(--acid); border-color: var(--acid); color: var(--ink); }
+  .tool.primary { background: var(--lime-fill); border-color: #f4ffb0; color: var(--ink); }
+  :where(.pill, .person, .tool):active { filter: brightness(.9); }
   .brief { grid-area: brief; display: none; }
   .room-key { display: flex; flex-wrap: wrap; gap: 5px; }
   .room-chip {
@@ -435,7 +474,7 @@
     gap: 8px;
     padding: 11px 13px;
     border-bottom: 2px solid var(--ink);
-    background: var(--acid);
+    background: var(--lime-fill);
   }
   .dialog-head h2 { margin: 0; font-size: 1.06rem; line-height: 1.15; }
   .verdict-banner {
