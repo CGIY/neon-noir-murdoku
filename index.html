@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090b14">
+  <meta name="description" content="Le Dernier Set : une enquête logique cyberpunk jouable sur une grille 8×8.">
+  <title>Le Dernier Set — Néon Noir</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090b14;
+      --panel: rgba(16, 20, 34, .94);
+      --panel-2: #11182a;
+      --ink: #edf5ff;
+      --muted: #a5b1c7;
+      --faint: #66748d;
+      --cyan: #59f4e8;
+      --pink: #ff4e9a;
+      --violet: #a78bfa;
+      --lime: #c7ff69;
+      --line: rgba(168, 195, 236, .15);
+      --cell: min(10.7vw, 54px);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 88% 4%, rgba(255, 54, 137, .15), transparent 30rem),
+        radial-gradient(ellipse at 8% 36%, rgba(31, 229, 216, .12), transparent 28rem),
+        linear-gradient(145deg, #090b14, #0c1020 58%, #11101b);
+    }
+    button { font: inherit; }
+    .page { width: min(100%, 760px); margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 14px max(28px, env(safe-area-inset-bottom)); }
+    .topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; color: var(--muted); font-size: 11px; letter-spacing: .17em; text-transform: uppercase; }
+    .brand { color: var(--cyan); font-weight: 850; letter-spacing: .22em; text-shadow: 0 0 16px rgba(89,244,232,.5); }
+    .case-id { border: 1px solid var(--line); border-radius: 999px; padding: 7px 10px; background: rgba(255,255,255,.03); }
+    .hero { position: relative; overflow: hidden; padding: 21px 19px 19px; border: 1px solid rgba(89,244,232,.25); border-radius: 20px 20px 7px 20px; background: linear-gradient(120deg, rgba(17,27,42,.98), rgba(29,17,38,.92)); box-shadow: 0 18px 50px rgba(0,0,0,.25), inset 0 0 36px rgba(89,244,232,.035); }
+    .hero::after { content: ""; position: absolute; width: 150px; height: 150px; right: -44px; top: -62px; border: 1px solid rgba(255,78,154,.25); transform: rotate(45deg); box-shadow: 0 0 0 14px rgba(255,78,154,.035), 0 0 0 28px rgba(255,78,154,.025); pointer-events: none; }
+    .eyebrow { color: var(--pink); font-size: 10px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+    h1 { margin: 6px 0 8px; font-size: clamp(27px, 7vw, 43px); line-height: .98; letter-spacing: -.045em; text-shadow: 0 0 25px rgba(255,78,154,.2); }
+    .hero p { position: relative; z-index: 1; max-width: 550px; margin: 0; color: #c3cee0; font-size: 14px; line-height: 1.5; }
+    .hero strong { color: #fff; }
+    .statusline { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+    .tag { padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.035); color: #c8d4e8; font-size: 10px; letter-spacing: .06em; }
+    .tag.cyan { color: var(--cyan); border-color: rgba(89,244,232,.28); }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.07fr) minmax(250px, .93fr); gap: 13px; margin-top: 14px; align-items: start; }
+    .panel { min-width: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); box-shadow: 0 12px 36px rgba(0,0,0,.2); }
+    .board-panel { padding: 13px; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin: 0 0 10px; }
+    .section-head h2 { margin: 0; font-size: 13px; letter-spacing: .04em; }
+    .small-label { color: var(--faint); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+    .board-shell { width: 100%; max-width: 510px; margin: 0 auto; }
+    .col-labels { display: grid; grid-template-columns: repeat(8, 1fr); margin-left: 24px; margin-bottom: 4px; text-align: center; color: #9bacbf; font-size: 10px; font-weight: 750; }
+    .board-row { display: grid; grid-template-columns: 19px minmax(0, 1fr); gap: 5px; align-items: stretch; }
+    .row-labels { display: grid; grid-template-rows: repeat(8, 1fr); color: #9bacbf; font-size: 10px; font-weight: 750; text-align: center; }
+    .row-labels span { display: grid; place-items: center; }
+    .board-grid { width: 100%; aspect-ratio: 1; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); overflow: hidden; border: 2px solid rgba(197,216,255,.42); border-radius: 7px; background: #11182a; touch-action: manipulation; }
+    .cell { position: relative; min-width: 0; min-height: 0; display: grid; place-items: center; padding: 1px; border: 0; border-right: 1px solid rgba(185,207,242,.16); border-bottom: 1px solid rgba(185,207,242,.16); color: white; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .cell.node { background: linear-gradient(135deg, rgba(75,78,164,.42), rgba(76,60,133,.32)); }
+    .cell.booth { background: linear-gradient(135deg, rgba(125,43,101,.38), rgba(88,40,93,.34)); }
+    .cell.dock { background: linear-gradient(135deg, rgba(21,112,129,.38), rgba(27,81,111,.34)); }
+    .cell.garden { background: linear-gradient(135deg, rgba(55,119,100,.36), rgba(37,93,91,.32)); }
+    .cell.room-top, .cell.room-left { box-shadow: inset 0 0 0 1px rgba(210,228,255,.25); }
+    .cell.room-top { border-top: 2px solid rgba(225,240,255,.73); }
+    .cell.room-left { border-left: 2px solid rgba(225,240,255,.73); }
+    .cell.room-right { border-right: 2px solid rgba(225,240,255,.73); }
+    .cell.room-bottom { border-bottom: 2px solid rgba(225,240,255,.73); }
+    .cell:focus-visible, button:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; z-index: 3; }
+    .cell.blocked { cursor: default; }
+    .cell.blocked::before { content: ""; position: absolute; inset: 0; background: rgba(5,8,17,.47); }
+    .block-x { position: absolute; z-index: 1; color: rgba(207,220,243,.58); font-size: clamp(12px, 4vw, 20px); font-weight: 300; line-height: 1; }
+    .cell.object-only { cursor: default; }
+    .object-icon { position: absolute; z-index: 1; right: 2px; top: 1px; font-size: clamp(9px, 2.7vw, 14px); filter: drop-shadow(0 0 4px rgba(255,255,255,.45)); }
+    .object-label { position: absolute; z-index: 1; bottom: 1px; left: 2px; right: 2px; overflow: hidden; color: rgba(245,250,255,.78); font-size: clamp(5px, 1.5vw, 7px); line-height: 1; white-space: nowrap; text-overflow: ellipsis; text-align: left; }
+    .room-label { position: absolute; z-index: 2; top: 1px; left: 2px; max-width: calc(100% - 13px); overflow: hidden; color: rgba(238,247,255,.78); font-size: clamp(4px, 1.15vw, 6px); font-weight: 850; letter-spacing: .04em; line-height: 1; white-space: nowrap; text-overflow: ellipsis; text-transform: uppercase; }
+    .person-token { position: relative; z-index: 2; width: 76%; height: 76%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.88); border-radius: 50%; background: var(--person-color, var(--cyan)); color: #080b13; font-size: clamp(7px, 2.5vw, 12px); font-weight: 950; line-height: 1; box-shadow: 0 0 9px var(--person-color, var(--cyan)), 0 2px 5px rgba(0,0,0,.45); }
+    .person-token.victim { border-radius: 5px; color: #fff; background: #cc315f; box-shadow: 0 0 11px rgba(255,78,154,.8); transform: rotate(45deg) scale(.78); }
+    .person-token.victim span { transform: rotate(-45deg); }
+    .cell.is-selected { outline: 2px solid var(--lime); outline-offset: -3px; z-index: 2; }
+    .cell.note-mark::after { content: "×"; position: absolute; z-index: 2; color: #fff; opacity: .9; font-size: clamp(17px, 5vw, 27px); font-weight: 300; }
+    .cell.correct-cell { box-shadow: inset 0 0 0 3px var(--lime); }
+    .cell.wrong-cell { box-shadow: inset 0 0 0 3px var(--pink); }
+    .board-hint { min-height: 34px; margin: 10px 0 0; color: #adbad0; font-size: 11px; line-height: 1.4; }
+    .board-hint strong { color: var(--cyan); }
+    .tools { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
+    .btn { min-height: 42px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: #151c2d; color: var(--ink); font-size: 12px; font-weight: 780; cursor: pointer; transition: transform .15s ease, border-color .15s ease, background .15s ease; touch-action: manipulation; }
+    .btn:active { transform: scale(.98); }
+    .btn.primary { border-color: rgba(89,244,232,.4); background: linear-gradient(110deg, rgba(40,177,170,.2), rgba(91,86,187,.22)); color: #dffffc; }
+    .btn.accent { border-color: rgba(255,78,154,.35); color: #ffd7e7; }
+    .btn.active { border-color: var(--lime); color: var(--lime); box-shadow: 0 0 14px rgba(199,255,105,.12); }
+    .btn.subtle { background: transparent; color: var(--muted); }
+    .btn:disabled { opacity: .45; cursor: default; }
+    .right-column { display: grid; gap: 13px; }
+    .roster-panel, .clue-panel { padding: 13px; }
+    .roster { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; }
+    .suspect { min-width: 0; display: flex; align-items: center; gap: 8px; padding: 8px 8px; text-align: left; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: rgba(255,255,255,.025); cursor: pointer; }
+    .suspect.selected { border-color: var(--lime); background: rgba(199,255,105,.08); box-shadow: 0 0 14px rgba(199,255,105,.07); }
+    .avatar { flex: 0 0 27px; width: 27px; height: 27px; display: grid; place-items: center; border-radius: 50%; color: #081018; font-size: 9px; font-weight: 950; background: var(--person-color); box-shadow: 0 0 10px color-mix(in srgb, var(--person-color) 55%, transparent); }
+    .suspect-name { min-width: 0; flex: 1; overflow: hidden; font-size: 11px; font-weight: 800; white-space: nowrap; text-overflow: ellipsis; }
+    .suspect-state { color: var(--faint); font-size: 11px; }
+    .victim-note { display: flex; align-items: center; gap: 8px; margin-top: 9px; padding: 8px 9px; border: 1px solid rgba(255,78,154,.22); border-radius: 9px; background: rgba(255,78,154,.055); color: #f5c8da; font-size: 11px; }
+    .victim-diamond { width: 14px; height: 14px; display: grid; place-items: center; border-radius: 3px; background: var(--pink); color: #fff; font-size: 8px; transform: rotate(45deg); }
+    .victim-diamond span { transform: rotate(-45deg); }
+    .clue-title { display: flex; align-items: center; gap: 8px; }
+    .clue-title h2 { margin: 0; font-size: 13px; }
+    .clue-text { min-height: 55px; margin: 11px 0 10px; padding: 11px 12px; border-left: 2px solid var(--cyan); border-radius: 0 9px 9px 0; background: rgba(89,244,232,.055); color: #e1ebf8; font-size: 13px; line-height: 1.5; }
+    .clue-rule { color: var(--muted); font-size: 10px; line-height: 1.45; }
+    .selected-tools { display: flex; gap: 7px; margin-top: 10px; }
+    .selected-tools .btn { flex: 1; min-height: 36px; font-size: 10px; }
+    .rules { margin-top: 13px; padding: 12px 14px; }
+    .rules h2 { margin: 0 0 7px; font-size: 12px; }
+    .rules ol { margin: 0; padding-left: 18px; color: #abb8cf; font-size: 11px; line-height: 1.6; }
+    .rules strong { color: #e7f3ff; }
+    .room-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .room-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 99px; padding: 5px 7px; color: #becbe0; font-size: 9px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--dot); box-shadow: 0 0 8px var(--dot); }
+    .message { display: none; margin-top: 11px; padding: 10px 11px; border: 1px solid rgba(89,244,232,.2); border-radius: 10px; background: rgba(89,244,232,.07); color: #d8fffb; font-size: 11px; line-height: 1.45; }
+    .message.show { display: block; }
+    .message.error { border-color: rgba(255,78,154,.32); background: rgba(255,78,154,.075); color: #ffd6e5; }
+    .message.win { border-color: rgba(199,255,105,.45); background: rgba(199,255,105,.09); color: #e9ffc4; }
+    .footer { margin-top: 14px; color: #75829a; text-align: center; font-size: 9px; letter-spacing: .06em; }
+    @media (max-width: 620px) {
+      .page { padding-left: 10px; padding-right: 10px; }
+      .topline { margin-bottom: 10px; }
+      .hero { padding: 17px 15px 15px; border-radius: 16px 16px 6px 16px; }
+      .hero p { font-size: 12px; }
+      .layout { grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+      .board-panel { padding: 11px; }
+      .right-column { gap: 10px; }
+      .roster-panel, .clue-panel { padding: 11px; }
+      .roster { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+      .suspect { flex-direction: column; justify-content: center; gap: 4px; padding: 6px 3px; min-height: 61px; }
+      .suspect-name { max-width: 100%; font-size: 9px; text-align: center; }
+      .suspect-state { position: absolute; display: none; }
+      .avatar { flex-basis: 26px; width: 26px; height: 26px; }
+      .board-hint { min-height: 28px; }
+      .rules { margin-top: 10px; }
+    }
+    @media (min-width: 621px) {
+      .page { padding-top: 24px; }
+      .layout { grid-template-columns: minmax(0, 1.08fr) minmax(270px, .92fr); }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topline"><div class="brand">NÉON <span style="color:#ff4e9a">//</span> NOIR</div><div class="case-id">DOSSIER 01 · NIGHT CITY</div></div>
+    <header class="hero">
+      <div class="eyebrow">Enquête logique · Niveau pilote</div>
+      <h1>Le Dernier Set</h1>
+      <p>À minuit, le Gridclub a plongé dans le noir. <strong>Nova, la DJ, a été retrouvée morte.</strong> Replace les sept suspects dans la scène, puis découvre qui se trouvait seul avec elle.</p>
+      <div class="statusline"><span class="tag cyan">GRILLE 8 × 8</span><span class="tag">DIFFICULTÉ · INITIATION</span><span class="tag">7 SUSPECTS + 1 VICTIME</span></div>
+    </header>
+
+    <div class="layout">
+      <section class="panel board-panel" aria-labelledby="board-title">
+        <div class="section-head"><h2 id="board-title">Scène du Gridclub</h2><span class="small-label">Rangées 1–8 · Colonnes 1–8</span></div>
+        <div class="board-shell">
+          <div class="col-labels" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+          <div class="board-row">
+            <div class="row-labels" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+            <div id="board" class="board-grid" role="grid" aria-label="Grille de jeu 8 par 8"></div>
+          </div>
+        </div>
+        <p id="board-hint" class="board-hint" aria-live="polite"><strong>Choisis Aiko</strong>, puis touche une case libre pour la placer. Les rangées et colonnes occupées se barrent automatiquement.</p>
+        <div class="tools">
+          <button id="notes-button" class="btn" type="button" aria-pressed="false">✕ Mode notes</button>
+          <button id="hint-button" class="btn accent" type="button">✦ Indice</button>
+          <button id="check-button" class="btn primary" type="button">Vérifier la solution</button>
+          <button id="reset-button" class="btn subtle" type="button">Recommencer</button>
+        </div>
+        <div id="message" class="message" role="status" aria-live="polite"></div>
+      </section>
+
+      <div class="right-column">
+        <section class="panel roster-panel" aria-labelledby="suspects-title">
+          <div class="section-head"><h2 id="suspects-title">Suspects</h2><span id="progress" class="small-label">0 / 7 placés</span></div>
+          <div id="roster" class="roster"></div>
+          <div class="victim-note"><span class="victim-diamond"><span>V</span></span><span><strong>Nova · victime</strong> — position connue : rangée 4, colonne 4.</span></div>
+        </section>
+
+        <section class="panel clue-panel" aria-labelledby="clue-heading">
+          <div class="clue-title"><span id="clue-avatar" class="avatar" style="--person-color:#59f4e8">AI</span><h2 id="clue-heading">Indice d’Aiko</h2></div>
+          <p id="clue-text" class="clue-text"></p>
+          <div class="clue-rule">Touche un portrait pour lire son indice. Clique ensuite une case pour placer ou déplacer ce suspect.</div>
+          <div class="selected-tools"><button id="remove-button" class="btn subtle" type="button">Retirer sa pose</button><button id="clear-notes-button" class="btn subtle" type="button">Effacer les notes</button></div>
+        </section>
+      </div>
+    </div>
+
+    <section class="panel rules">
+      <h2>Règles de l’enquête</h2>
+      <ol>
+        <li>Place chaque suspect une seule fois. <strong>Une personne par rangée et par colonne</strong>, victime comprise.</li>
+        <li>Les cases assombries sont bloquées par une pose. Les objets dessinés ne peuvent pas être occupés.</li>
+        <li>La personne seule avec Nova dans le même secteur est la coupable. Les quatre secteurs sont séparés par les lignes épaisses.</li>
+      </ol>
+      <div class="room-legend" aria-label="Légende des secteurs">
+        <span class="room-chip"><i class="dot" style="--dot:#a78bfa"></i>Nœud 09</span>
+        <span class="room-chip"><i class="dot" style="--dot:#ff4e9a"></i>Cabine DJ</span>
+        <span class="room-chip"><i class="dot" style="--dot:#59d8e8"></i>Dock 13</span>
+        <span class="room-chip"><i class="dot" style="--dot:#8bdc9d"></i>Serre Chrome</span>
+      </div>
+    </section>
+    <div class="footer">UNE AFFAIRE ORIGINALE · NIVEAU 01 · CONÇU POUR LE JEU SUR MOBILE</div>
+  </main>
+
+  <script>
+    (() => {
+      const suspects = [
+        { id: "aiko", name: "Aiko", initials: "AI", color: "#59f4e8", clue: "Aiko a été aperçue dans le secteur Nœud 09." },
+        { id: "brix", name: "Brix", initials: "BR", color: "#ffad5c", clue: "Brix était dans la rangée la plus au nord de la Cabine DJ." },
+        { id: "coda", name: "Coda", initials: "CO", color: "#ff79bb", clue: "Coda se trouvait exactement deux rangées au sud du drone rouge." },
+        { id: "dax", name: "Dax", initials: "DA", color: "#9daeff", clue: "Dax était juste à l’ouest de la moto accidentée, sur la même rangée." },
+        { id: "emi", name: "Emi", initials: "EM", color: "#f3e37a", clue: "Emi était une rangée au sud et deux colonnes à l’est de Dax." },
+        { id: "fox", name: "Fox", initials: "FO", color: "#c6ff75", clue: "Fox se trouvait exactement deux rangées au sud du relais cyan." },
+        { id: "gaku", name: "Gaku", initials: "GA", color: "#c39bff", clue: "Gaku était immédiatement à l’est de l’orchidée bleue." }
+      ];
+      const victim = { id: "nova", name: "Nova", initials: "NV", cell: 27 };
+      const solution = { aiko: 9, brix: 5, coda: 23, dax: 32, emi: 42, fox: 52, gaku: 62 };
+      const objects = {
+        7: { icon: "🛸", label: "Drone rouge", title: "Drone rouge · case interdite" },
+        33: { icon: "🏍️", label: "Moto accidentée", title: "Moto accidentée · case interdite" },
+        36: { icon: "💠", label: "Relais cyan", title: "Relais cyan · case interdite" },
+        61: { icon: "🪴", label: "Orchidée bleue", title: "Orchidée bleue · case interdite" }
+      };
+      const roomNames = { node: "Nœud 09", booth: "Cabine DJ", dock: "Dock 13", garden: "Serre Chrome" };
+      const roomStart = { 0: "Nœud 09", 4: "Cabine DJ", 32: "Dock 13", 36: "Serre Chrome" };
+      const hintSteps = [
+        "Les indices de Coda, Dax, Emi, Fox et Gaku localisent déjà cinq suspects. Nova occupe aussi la rangée 4 et la colonne 4.",
+        "Il reste deux suspects pour deux rangées et deux colonnes : Aiko est dans Nœud 09 ; Brix est dans la rangée la plus au nord de la Cabine DJ.",
+        "Les colonnes restantes sont 2 et 6. Nœud 09 contient la colonne 2 ; la Cabine DJ, la colonne 6. Brix prend la rangée 1, Aiko la rangée 2."
+      ];
+      const board = document.getElementById("board");
+      const roster = document.getElementById("roster");
+      const message = document.getElementById("message");
+      const boardHint = document.getElementById("board-hint");
+      const clueText = document.getElementById("clue-text");
+      const clueHeading = document.getElementById("clue-heading");
+      const clueAvatar = document.getElementById("clue-avatar");
+      let placements = { nova: victim.cell };
+      let notes = new Set();
+      let selected = "aiko";
+      let noteMode = false;
+      let hintIndex = 0;
+      let checked = false;
+
+      function roomFor(cell) {
+        const row = Math.floor(cell / 8), col = cell % 8;
+        if (row < 4 && col < 4) return "node";
+        if (row < 4) return "booth";
+        if (col < 4) return "dock";
+        return "garden";
+      }
+      function person(id) { return id === "nova" ? victim : suspects.find(s => s.id === id); }
+      function positionLabel(cell) { return `rangée ${Math.floor(cell / 8) + 1}, colonne ${cell % 8 + 1}`; }
+      function announce(text, kind = "") {
+        message.textContent = text;
+        message.className = `message show ${kind}`.trim();
+      }
+      function hideMessage() { message.textContent = ""; message.className = "message"; }
+      function selectedPerson() { return suspects.find(s => s.id === selected); }
+      function isBlocked(cell, exceptId = selected) {
+        const row = Math.floor(cell / 8), col = cell % 8;
+        return Object.entries(placements).some(([id, placed]) => id !== exceptId && (Math.floor(placed / 8) === row || placed % 8 === col));
+      }
+      function ownerAt(cell) { return Object.entries(placements).find(([, placed]) => placed === cell)?.[0] || null; }
+      function isForbiddenObject(cell) { return Object.hasOwn(objects, cell); }
+      function renderRoster() {
+        roster.innerHTML = "";
+        for (const suspect of suspects) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `suspect ${selected === suspect.id ? "selected" : ""}`;
+          button.setAttribute("aria-pressed", selected === suspect.id ? "true" : "false");
+          button.setAttribute("aria-label", `${suspect.name}${placements[suspect.id] !== undefined ? ", placé" : ", à placer"}`);
+          button.innerHTML = `<span class="avatar" style="--person-color:${suspect.color}">${suspect.initials}</span><span class="suspect-name">${suspect.name}</span><span class="suspect-state">${placements[suspect.id] !== undefined ? "●" : "○"}</span>`;
+          button.addEventListener("click", () => {
+            selected = suspect.id;
+            checked = false;
+            hideMessage();
+            render();
+          });
+          roster.append(button);
+        }
+        const count = suspects.filter(s => placements[s.id] !== undefined).length;
+        document.getElementById("progress").textContent = `${count} / 7 placés`;
+        const current = selectedPerson();
+        clueHeading.textContent = `Indice de ${current.name}`;
+        clueText.textContent = current.clue;
+        clueAvatar.textContent = current.initials;
+        clueAvatar.style.setProperty("--person-color", current.color);
+        document.getElementById("remove-button").disabled = placements[selected] === undefined;
+      }
+      function renderBoard() {
+        board.innerHTML = "";
+        for (let cell = 0; cell < 64; cell++) {
+          const row = Math.floor(cell / 8), col = cell % 8;
+          const room = roomFor(cell);
+          const owner = ownerAt(cell);
+          const blocked = !owner && isBlocked(cell);
+          const forbidden = !owner && isForbiddenObject(cell);
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `cell ${room}${row === 0 || row === 4 ? " room-top" : ""}${col === 0 || col === 4 ? " room-left" : ""}${col === 3 || col === 7 ? " room-right" : ""}${row === 3 || row === 7 ? " room-bottom" : ""}`;
+          if (blocked) button.classList.add("blocked");
+          if (forbidden) button.classList.add("object-only");
+          if (notes.has(cell) && !owner) button.classList.add("note-mark");
+          if (owner === selected) button.classList.add("is-selected");
+          if (checked && owner && owner !== "nova") button.classList.add(placements[owner] === solution[owner] ? "correct-cell" : "wrong-cell");
+          button.setAttribute("role", "gridcell");
+          const ownerName = owner ? person(owner).name : "case vide";
+          button.setAttribute("aria-label", `Rangée ${row + 1}, colonne ${col + 1}, ${roomNames[room]}${owner ? `, ${ownerName}` : ""}${objects[cell] ? `, ${objects[cell].title}` : ""}${blocked ? ", bloquée par une autre pose" : ""}`);
+          const zoneName = roomStart[cell];
+          if (zoneName) {
+            const label = document.createElement("span"); label.className = "room-label"; label.textContent = zoneName; button.append(label);
+          }
+          if (objects[cell]) {
+            const object = document.createElement("span"); object.className = "object-icon"; object.textContent = objects[cell].icon; object.title = objects[cell].title; button.append(object);
+            const objectLabel = document.createElement("span"); objectLabel.className = "object-label"; objectLabel.textContent = objects[cell].label; button.append(objectLabel);
+          }
+          if (blocked) {
+            const x = document.createElement("span"); x.className = "block-x"; x.setAttribute("aria-hidden", "true"); x.textContent = "×"; button.append(x);
+          }
+          if (owner) {
+            const who = person(owner);
+            const token = document.createElement("span");
+            token.className = `person-token ${owner === "nova" ? "victim" : ""}`;
+            token.style.setProperty("--person-color", who.color || "#ff4e9a");
+            token.innerHTML = `<span>${who.initials}</span>`;
+            button.append(token);
+          }
+          button.addEventListener("click", () => handleCell(cell));
+          board.append(button);
+        }
+      }
+      function render() {
+        renderRoster();
+        renderBoard();
+        const current = selectedPerson();
+        boardHint.innerHTML = noteMode
+          ? `<strong>Mode notes</strong> · touche une case vide pour poser ou retirer une marque.`
+          : `<strong>${current.name}</strong> sélectionné${placements[selected] !== undefined ? " · touche une case libre pour déplacer ce suspect" : " · touche une case libre pour le placer"}.`;
+        document.getElementById("notes-button").classList.toggle("active", noteMode);
+        document.getElementById("notes-button").setAttribute("aria-pressed", noteMode ? "true" : "false");
+      }
+      function handleCell(cell) {
+        const owner = ownerAt(cell);
+        if (noteMode) {
+          if (owner) { announce(`${person(owner).name} occupe déjà cette case.`, "error"); return; }
+          if (notes.has(cell)) notes.delete(cell); else notes.add(cell);
+          checked = false; hideMessage(); render(); return;
+        }
+        if (owner) {
+          if (owner === "nova") { announce("Nova est déjà fixée à la rangée 4, colonne 4."); return; }
+          if (owner !== selected) { selected = owner; checked = false; hideMessage(); render(); }
+          else announce(`${person(owner).name} est déjà sur cette case. Choisis une autre case pour la déplacer.`);
+          return;
+        }
+        if (isForbiddenObject(cell)) { announce("Cette case est occupée par un élément du décor.", "error"); return; }
+        if (isBlocked(cell)) { announce("Cette case est barrée par une personne déjà placée dans la même rangée ou colonne.", "error"); return; }
+        placements[selected] = cell;
+        notes.delete(cell);
+        checked = false;
+        hideMessage();
+        render();
+      }
+      document.getElementById("notes-button").addEventListener("click", () => { noteMode = !noteMode; hideMessage(); render(); });
+      document.getElementById("remove-button").addEventListener("click", () => {
+        if (placements[selected] === undefined) return;
+        delete placements[selected]; checked = false; hideMessage(); render();
+      });
+      document.getElementById("clear-notes-button").addEventListener("click", () => { notes.clear(); hideMessage(); render(); });
+      document.getElementById("hint-button").addEventListener("click", () => {
+        const text = hintSteps[Math.min(hintIndex, hintSteps.length - 1)];
+        hintIndex = Math.min(hintIndex + 1, hintSteps.length - 1);
+        announce(`Indice ${Math.min(hintIndex, hintSteps.length)} / 3 · ${text}`);
+      });
+      document.getElementById("check-button").addEventListener("click", () => {
+        const missing = suspects.filter(s => placements[s.id] === undefined);
+        if (missing.length) {
+          announce(`Il reste ${missing.length} suspect${missing.length > 1 ? "s" : ""} à placer : ${missing.map(s => s.name).join(", ")}.`, "error");
+          return;
+        }
+        checked = true;
+        const wrong = suspects.filter(s => placements[s.id] !== solution[s.id]);
+        render();
+        if (wrong.length) {
+          announce(`${wrong.length} pose${wrong.length > 1 ? "s" : ""} à revoir : ${wrong.map(s => s.name).join(", ")}. Les poses correctes sont encadrées en vert.`, "error");
+          return;
+        }
+        const killer = suspects.find(s => roomFor(solution[s.id]) === roomFor(victim.cell));
+        announce(`Affaire résolue ! ${killer.name} se trouvait seule avec Nova dans le secteur ${roomNames[roomFor(victim.cell)]}. ${killer.name} est la coupable.`, "win");
+      });
+      document.getElementById("reset-button").addEventListener("click", () => {
+        placements = { nova: victim.cell }; notes.clear(); selected = "aiko"; noteMode = false; hintIndex = 0; checked = false; hideMessage(); render();
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>
