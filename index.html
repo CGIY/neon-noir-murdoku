@@ -1,407 +1,1010 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#090b14">
-  <meta name="description" content="Le Dernier Set : une enquête logique cyberpunk jouable sur une grille 8×8.">
-  <title>Le Dernier Set — Néon Noir</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #090b14;
-      --panel: rgba(16, 20, 34, .94);
-      --panel-2: #11182a;
-      --ink: #edf5ff;
-      --muted: #a5b1c7;
-      --faint: #66748d;
-      --cyan: #59f4e8;
-      --pink: #ff4e9a;
-      --violet: #a78bfa;
-      --lime: #c7ff69;
-      --line: rgba(168, 195, 236, .15);
-      --cell: min(10.7vw, 54px);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101624">
+<meta name="description" content="Néon Noir, six enquêtes de déduction cyberpunk sur des plans 8 × 8.">
+<title>Néon Noir · Enquêtes cyberpunk</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --ink: #101624;
+    --paper: #f5f0df;
+    --muted: #b0bbca;
+    --surface: #1b2639;
+    --line: #455269;
+    --acid: #e8ff64;
+    --cyan: #91f7e6;
+    --pink: #ff9bc9;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    color: var(--paper);
+    background: radial-gradient(ellipse at top, #26364c, transparent 75%), var(--ink);
+  }
+  button { font: inherit; cursor: pointer; touch-action: manipulation; }
+  button:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; z-index: 4; }
+  button:disabled { cursor: default; opacity: .45; }
+  svg { display: block; }
+  .game {
+    width: min(100%, 1120px);
+    margin-inline: auto;
+    padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+    height: 100vh;
+    height: 100dvh;
+    min-height: 498px;
+    display: grid;
+    grid-template-rows: auto auto minmax(205px, 1fr) auto auto auto;
+    grid-template-areas: "header" "meta" "stage" "roster" "clue" "tools";
+    gap: 6px;
+  }
+  .masthead {
+    grid-area: header;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid var(--acid);
+  }
+  .masthead h1 {
+    margin: 1px 0 0;
+    font-size: clamp(16px, 5vw, 25px);
+    line-height: 1.05;
+    font-weight: 950;
+    letter-spacing: -.035em;
+    text-wrap: balance;
+  }
+  .series, .technical {
+    font: 750 .66rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .085em;
+    text-transform: uppercase;
+  }
+  .series { color: var(--acid); }
+  .series .slashes { color: var(--pink); }
+  .head-actions { display: flex; align-items: center; gap: 5px; }
+  .pill {
+    min-height: 38px;
+    padding: 0 9px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--surface);
+    color: var(--paper);
+    font-size: .73rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .pill.dossiers { color: var(--ink); background: var(--acid); border-color: var(--acid); }
+  .meta {
+    grid-area: meta;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5px;
+    min-height: 34px;
+  }
+  .meta .technical { color: var(--cyan); }
+  .plan-caption { min-width: 0; }
+  .status {
+    min-height: 1.2em;
+    margin: 2px 0 0;
+    color: var(--muted);
+    font-size: .72rem;
+    line-height: 1.2;
+  }
+  .status[data-kind="bad"] { color: #ffb7b2; }
+  .status[data-kind="ok"] { color: var(--acid); }
+  .legend-button { min-height: 32px; }
+  .stage {
+    grid-area: stage;
+    min-height: 0;
+    min-width: 0;
+    display: grid;
+    place-items: center;
+    container-type: size;
+  }
+  .board {
+    position: relative;
+    display: grid;
+    grid-template: repeat(8, minmax(0, 1fr)) / repeat(8, minmax(0, 1fr));
+    isolation: isolate;
+    width: min(100%, calc(100vh - 276px), 560px);
+    width: min(100%, calc(100dvh - 276px), 560px);
+    min-width: min(100%, 200px);
+    aspect-ratio: 1;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px #0a0e17, 0 4px 16px #0a0e1788;
+  }
+  @supports (width: 1cqh) {
+    .board { width: min(100cqw, 100cqh, 560px); }
+  }
+  .cell {
+    --floor: #a8dbcf;
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    color: var(--ink);
+    background-color: var(--floor);
+    background-image: var(--grain);
+    box-shadow: inset -1px -1px #10162433;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .floor-0 { --floor: #94e3d1; --grain: repeating-linear-gradient(135deg, transparent 0 7px, #10494b18 7px 8px); }
+  .floor-1 { --floor: #cdbdf7; --grain: radial-gradient(#33144e33 1px, transparent 1px); background-size: 6px 6px; }
+  .floor-2 { --floor: #ffd786; --grain: repeating-linear-gradient(0deg, transparent 0 8px, #8c4a261d 8px 9px); }
+  .floor-3 { --floor: #ffb5ac; --grain: repeating-linear-gradient(90deg, transparent 0 8px, #8c323018 8px 9px); }
+  .floor-4 { --floor: #accbff; --grain: repeating-linear-gradient(45deg, transparent 0 10px, #233d7c26 10px 11px); }
+  .floor-5 { --floor: #d0e891; --grain: radial-gradient(#41491438 1px, transparent 1px); background-size: 8px 8px; }
+  .cell::after {
+    content: "";
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    inset: 0;
+    border-right: var(--wall-right, 0px) solid var(--ink);
+    border-bottom: var(--wall-bottom, 0px) solid var(--ink);
+  }
+  .room-stamp {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    left: 3px;
+    top: 3px;
+    min-width: 1.25em;
+    padding: 1px 2px;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+    font: 900 clamp(.47rem, 1.7vw, .69rem)/1 ui-monospace, monospace;
+  }
+  .object {
+    position: absolute;
+    inset: 9%;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+  }
+  .object svg { width: 100%; height: 100%; }
+  .cell.object-focus .object {
+    filter: drop-shadow(0 0 1px white) drop-shadow(0 0 2px white);
+  }
+  .cell.blocked { background-color: color-mix(in srgb, var(--floor) 73%, #63758d); }
+  .cell.blocked::before {
+    content: "×";
+    position: absolute;
+    z-index: 1;
+    right: 10%;
+    bottom: 9%;
+    color: #1d294e9c;
+    font: 760 clamp(.76rem, 4vw, 1.4rem)/.8 system-ui, sans-serif;
+    pointer-events: none;
+  }
+  .cell.blocked:not(.has-object)::before { inset: 0; display: grid; place-items: center; }
+  .note {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    place-items: center;
+    font-size: clamp(1.15rem, 6vw, 2.4rem);
+    line-height: 1;
+    font-weight: 900;
+    color: #fdf7f1;
+    text-shadow: -1px -1px #641944, 1px -1px #641944, 1px 1px #641944, -1px 1px #641944, 0 0 4px #641944;
+    pointer-events: none;
+  }
+  .cell.noted .note { display: grid; }
+  .token {
+    display: none;
+    position: absolute;
+    z-index: 3;
+    inset: 14%;
+    place-items: center;
+    border-radius: 25%;
+    border: 2px solid var(--ink);
+    color: var(--ink);
+    background: var(--person, var(--acid));
+    font-size: clamp(.62rem, 3vw, 1.12rem);
+    line-height: 1;
+    font-weight: 950;
+    box-shadow: 0 2px 0 #10162495;
+    pointer-events: none;
+  }
+  .cell.occupied .token { display: grid; }
+  .cell.occupied .object { opacity: .4; }
+  .token.victim { border-style: dashed; }
+  .cell.selected-piece .token { outline: 2px solid white; }
+  .cell.right .token { outline: 2px solid #146436; }
+  .cell.wrong .token { outline: 3px solid #b1003a; }
+  .roster {
+    grid-area: roster;
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 3px;
+  }
+  .person {
+    position: relative;
+    min-width: 0;
+    min-height: 46px;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 3px;
+    padding: 3px 0;
+    border-radius: 5px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--paper);
+  }
+  .person[aria-pressed="true"] { color: var(--ink); background: var(--acid); border-color: var(--acid); }
+  .portrait {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 21px;
+    height: 21px;
+    border: 1px solid var(--ink);
+    border-radius: 5px;
+    background: var(--person, var(--acid));
+    color: var(--ink);
+    font: 950 .62rem/1 ui-monospace, monospace;
+  }
+  .person-name {
+    max-width: 100%;
+    padding: 0 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: clamp(.56rem, 2.85vw, .79rem);
+    line-height: 1;
+    font-weight: 850;
+  }
+  .person.placed .person-name {
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+  }
+  .person.placed .portrait::after {
+    content: "";
+    position: absolute;
+    width: 113%;
+    height: 2px;
+    background: var(--ink);
+    rotate: -35deg;
+  }
+  .person.victim .portrait { border-style: dashed; }
+  .clue {
+    grid-area: clue;
+    min-width: 0;
+    min-height: 82px;
+    display: grid;
+    align-content: start;
+    gap: 4px;
+    padding: 5px 9px 7px;
+    border-left: 4px solid var(--pink);
+    border-radius: 2px 6px 6px 2px;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  .clue-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 5px;
+    min-height: 24px;
+  }
+  .clue-title { font-weight: 900; font-size: .77rem; }
+  .clue-title .technical { font-size: .57rem; color: #465066; }
+  .clue-content { display: flex; align-items: flex-start; gap: 6px; }
+  .clue-glyphs { flex: 0 0 auto; display: flex; gap: 2px; padding-top: 1px; }
+  .clue-glyphs svg { width: 19px; height: 19px; }
+  .clue-text { margin: 0; font-size: .82rem; line-height: 1.26; font-weight: 670; }
+  .remove {
+    min-height: 27px;
+    border: 0;
+    border-radius: 3px;
+    padding: 0 6px;
+    color: var(--ink);
+    background: #ded9ce;
+    font-size: .71rem;
+    font-weight: 750;
+  }
+  .remove:disabled { visibility: hidden; }
+  .tools {
+    grid-area: tools;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+  .tool {
+    display: flex;
+    min-height: 43px;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    padding: 3px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--surface);
+    color: var(--paper);
+    font-size: .78rem;
+    font-weight: 850;
+    white-space: nowrap;
+  }
+  .tool svg { width: 15px; height: 15px; }
+  .tool[aria-pressed="true"] { background: var(--pink); color: var(--ink); border-color: var(--pink); }
+  .tool.primary { background: var(--acid); border-color: var(--acid); color: var(--ink); }
+  .brief { grid-area: brief; display: none; }
+  .room-key { display: flex; flex-wrap: wrap; gap: 5px; }
+  .room-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: inherit;
+    font-size: .76rem;
+    font-weight: 730;
+  }
+  .room-chip b {
+    display: grid;
+    width: 19px;
+    height: 19px;
+    place-items: center;
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    color: var(--ink);
+    background: var(--floor);
+    font: 900 .64rem/1 ui-monospace, monospace;
+  }
+  dialog {
+    width: min(calc(100% - 22px), 515px);
+    max-height: min(88dvh, 690px);
+    padding: 0;
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    color: var(--ink);
+    background: var(--paper);
+    box-shadow: 0 18px 58px #080c16b8;
+    overscroll-behavior: contain;
+  }
+  dialog::backdrop { background: #090e1bc9; }
+  .dialog-head {
+    position: sticky;
+    z-index: 1;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 11px 13px;
+    border-bottom: 2px solid var(--ink);
+    background: var(--acid);
+  }
+  .dialog-head h2 { margin: 0; font-size: 1.06rem; line-height: 1.15; }
+  .close {
+    width: 35px;
+    height: 35px;
+    border: 1px solid var(--ink);
+    border-radius: 5px;
+    background: transparent;
+    color: var(--ink);
+    font-size: 1.45rem;
+    line-height: 1;
+  }
+  .dialog-body { padding: 12px 13px 15px; font-size: .89rem; line-height: 1.42; }
+  .dialog-body p:first-child { margin-top: 0; }
+  .dialog-body h3 { margin: 13px 0 5px; font-size: .9rem; }
+  .dialog-body ol { margin: 7px 0 14px; padding-left: 1.3rem; }
+  .dialog-body li + li { margin-top: 5px; }
+  .dialog-button {
+    min-height: 43px;
+    padding: 6px 10px;
+    border: 1px solid var(--ink);
+    border-radius: 5px;
+    color: var(--ink);
+    background: #e5e3d8;
+    font-size: .8rem;
+    font-weight: 850;
+  }
+  .dialog-button.positive { background: var(--acid); }
+  .dialog-actions, .object-key, .accusations { display: flex; flex-wrap: wrap; gap: 6px; }
+  .object-key span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 6px;
+    background: #e5e3d8;
+    border: 1px solid #c6c2b6;
+    border-radius: 5px;
+    font-size: .77rem;
+    font-weight: 730;
+  }
+  .object-key svg { width: 24px; height: 24px; }
+  .level-list { display: grid; gap: 6px; }
+  .level {
+    display: grid;
+    grid-template-columns: 32px minmax(0,1fr) auto;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 47px;
+    padding: 5px 7px;
+    text-align: left;
+    border: 1px solid #bcb9ad;
+    border-radius: 5px;
+    color: var(--ink);
+    background: #fffaf0;
+  }
+  .level[aria-current="true"] { border: 2px solid var(--ink); background: var(--acid); }
+  .level .level-id { font: 950 .9rem/1 ui-monospace, monospace; }
+  .level strong { display: block; font-size: .86rem; }
+  .level small { display: block; color: #41485a; font-size: .71rem; }
+  @media (min-width: 750px) {
+    .game {
+      padding: 20px;
+      gap: 9px 16px;
+      grid-template-columns: minmax(0, 1.25fr) minmax(290px, .85fr);
+      grid-template-rows: auto auto auto auto auto minmax(0,1fr);
+      grid-template-areas: "header header" "meta brief" "stage roster" "stage clue" "stage tools" "stage .";
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--ink);
-      background:
-        radial-gradient(ellipse at 88% 4%, rgba(255, 54, 137, .15), transparent 30rem),
-        radial-gradient(ellipse at 8% 36%, rgba(31, 229, 216, .12), transparent 28rem),
-        linear-gradient(145deg, #090b14, #0c1020 58%, #11101b);
+    .masthead { padding-bottom: 10px; }
+    .masthead h1 { font-size: 1.85rem; }
+    .head-actions { gap: 8px; }
+    .pill { min-height: 42px; padding-inline: 12px; }
+    .meta { align-self: start; }
+    .stage { min-height: 230px; align-self: stretch; }
+    .board { max-width: 560px; }
+    .brief {
+      display: block;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
     }
-    button { font: inherit; }
-    .page { width: min(100%, 760px); margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 14px max(28px, env(safe-area-inset-bottom)); }
-    .topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; color: var(--muted); font-size: 11px; letter-spacing: .17em; text-transform: uppercase; }
-    .brand { color: var(--cyan); font-weight: 850; letter-spacing: .22em; text-shadow: 0 0 16px rgba(89,244,232,.5); }
-    .case-id { border: 1px solid var(--line); border-radius: 999px; padding: 7px 10px; background: rgba(255,255,255,.03); }
-    .hero { position: relative; overflow: hidden; padding: 21px 19px 19px; border: 1px solid rgba(89,244,232,.25); border-radius: 20px 20px 7px 20px; background: linear-gradient(120deg, rgba(17,27,42,.98), rgba(29,17,38,.92)); box-shadow: 0 18px 50px rgba(0,0,0,.25), inset 0 0 36px rgba(89,244,232,.035); }
-    .hero::after { content: ""; position: absolute; width: 150px; height: 150px; right: -44px; top: -62px; border: 1px solid rgba(255,78,154,.25); transform: rotate(45deg); box-shadow: 0 0 0 14px rgba(255,78,154,.035), 0 0 0 28px rgba(255,78,154,.025); pointer-events: none; }
-    .eyebrow { color: var(--pink); font-size: 10px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
-    h1 { margin: 6px 0 8px; font-size: clamp(27px, 7vw, 43px); line-height: .98; letter-spacing: -.045em; text-shadow: 0 0 25px rgba(255,78,154,.2); }
-    .hero p { position: relative; z-index: 1; max-width: 550px; margin: 0; color: #c3cee0; font-size: 14px; line-height: 1.5; }
-    .hero strong { color: #fff; }
-    .statusline { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
-    .tag { padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.035); color: #c8d4e8; font-size: 10px; letter-spacing: .06em; }
-    .tag.cyan { color: var(--cyan); border-color: rgba(89,244,232,.28); }
-    .layout { display: grid; grid-template-columns: minmax(0, 1.07fr) minmax(250px, .93fr); gap: 13px; margin-top: 14px; align-items: start; }
-    .panel { min-width: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); box-shadow: 0 12px 36px rgba(0,0,0,.2); }
-    .board-panel { padding: 13px; }
-    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin: 0 0 10px; }
-    .section-head h2 { margin: 0; font-size: 13px; letter-spacing: .04em; }
-    .small-label { color: var(--faint); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
-    .board-shell { width: 100%; max-width: 510px; margin: 0 auto; }
-    .col-labels { display: grid; grid-template-columns: repeat(8, 1fr); margin-left: 24px; margin-bottom: 4px; text-align: center; color: #9bacbf; font-size: 10px; font-weight: 750; }
-    .board-row { display: grid; grid-template-columns: 19px minmax(0, 1fr); gap: 5px; align-items: stretch; }
-    .row-labels { display: grid; grid-template-rows: repeat(8, 1fr); color: #9bacbf; font-size: 10px; font-weight: 750; text-align: center; }
-    .row-labels span { display: grid; place-items: center; }
-    .board-grid { width: 100%; aspect-ratio: 1; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); overflow: hidden; border: 2px solid rgba(197,216,255,.42); border-radius: 7px; background: #11182a; touch-action: manipulation; }
-    .cell { position: relative; min-width: 0; min-height: 0; display: grid; place-items: center; padding: 1px; border: 0; border-right: 1px solid rgba(185,207,242,.16); border-bottom: 1px solid rgba(185,207,242,.16); color: white; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-    .cell.node { background: linear-gradient(135deg, rgba(75,78,164,.42), rgba(76,60,133,.32)); }
-    .cell.booth { background: linear-gradient(135deg, rgba(125,43,101,.38), rgba(88,40,93,.34)); }
-    .cell.dock { background: linear-gradient(135deg, rgba(21,112,129,.38), rgba(27,81,111,.34)); }
-    .cell.garden { background: linear-gradient(135deg, rgba(55,119,100,.36), rgba(37,93,91,.32)); }
-    .cell.room-top, .cell.room-left { box-shadow: inset 0 0 0 1px rgba(210,228,255,.25); }
-    .cell.room-top { border-top: 2px solid rgba(225,240,255,.73); }
-    .cell.room-left { border-left: 2px solid rgba(225,240,255,.73); }
-    .cell.room-right { border-right: 2px solid rgba(225,240,255,.73); }
-    .cell.room-bottom { border-bottom: 2px solid rgba(225,240,255,.73); }
-    .cell:focus-visible, button:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; z-index: 3; }
-    .cell.blocked { cursor: default; }
-    .cell.blocked::before { content: ""; position: absolute; inset: 0; background: rgba(5,8,17,.47); }
-    .block-x { position: absolute; z-index: 1; color: rgba(207,220,243,.58); font-size: clamp(12px, 4vw, 20px); font-weight: 300; line-height: 1; }
-    .cell.object-only { cursor: default; }
-    .object-icon { position: absolute; z-index: 1; right: 2px; top: 1px; font-size: clamp(9px, 2.7vw, 14px); filter: drop-shadow(0 0 4px rgba(255,255,255,.45)); }
-    .object-label { position: absolute; z-index: 1; bottom: 1px; left: 2px; right: 2px; overflow: hidden; color: rgba(245,250,255,.78); font-size: clamp(5px, 1.5vw, 7px); line-height: 1; white-space: nowrap; text-overflow: ellipsis; text-align: left; }
-    .room-label { position: absolute; z-index: 2; top: 1px; left: 2px; max-width: calc(100% - 13px); overflow: hidden; color: rgba(238,247,255,.78); font-size: clamp(4px, 1.15vw, 6px); font-weight: 850; letter-spacing: .04em; line-height: 1; white-space: nowrap; text-overflow: ellipsis; text-transform: uppercase; }
-    .person-token { position: relative; z-index: 2; width: 76%; height: 76%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.88); border-radius: 50%; background: var(--person-color, var(--cyan)); color: #080b13; font-size: clamp(7px, 2.5vw, 12px); font-weight: 950; line-height: 1; box-shadow: 0 0 9px var(--person-color, var(--cyan)), 0 2px 5px rgba(0,0,0,.45); }
-    .person-token.victim { border-radius: 5px; color: #fff; background: #cc315f; box-shadow: 0 0 11px rgba(255,78,154,.8); transform: rotate(45deg) scale(.78); }
-    .person-token.victim span { transform: rotate(-45deg); }
-    .cell.is-selected { outline: 2px solid var(--lime); outline-offset: -3px; z-index: 2; }
-    .cell.note-mark::after { content: "×"; position: absolute; z-index: 2; color: #fff; opacity: .9; font-size: clamp(17px, 5vw, 27px); font-weight: 300; }
-    .cell.correct-cell { box-shadow: inset 0 0 0 3px var(--lime); }
-    .cell.wrong-cell { box-shadow: inset 0 0 0 3px var(--pink); }
-    .board-hint { min-height: 34px; margin: 10px 0 0; color: #adbad0; font-size: 11px; line-height: 1.4; }
-    .board-hint strong { color: var(--cyan); }
-    .tools { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
-    .btn { min-height: 42px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: #151c2d; color: var(--ink); font-size: 12px; font-weight: 780; cursor: pointer; transition: transform .15s ease, border-color .15s ease, background .15s ease; touch-action: manipulation; }
-    .btn:active { transform: scale(.98); }
-    .btn.primary { border-color: rgba(89,244,232,.4); background: linear-gradient(110deg, rgba(40,177,170,.2), rgba(91,86,187,.22)); color: #dffffc; }
-    .btn.accent { border-color: rgba(255,78,154,.35); color: #ffd7e7; }
-    .btn.active { border-color: var(--lime); color: var(--lime); box-shadow: 0 0 14px rgba(199,255,105,.12); }
-    .btn.subtle { background: transparent; color: var(--muted); }
-    .btn:disabled { opacity: .45; cursor: default; }
-    .right-column { display: grid; gap: 13px; }
-    .roster-panel, .clue-panel { padding: 13px; }
-    .roster { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; }
-    .suspect { min-width: 0; display: flex; align-items: center; gap: 8px; padding: 8px 8px; text-align: left; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: rgba(255,255,255,.025); cursor: pointer; }
-    .suspect.selected { border-color: var(--lime); background: rgba(199,255,105,.08); box-shadow: 0 0 14px rgba(199,255,105,.07); }
-    .avatar { flex: 0 0 27px; width: 27px; height: 27px; display: grid; place-items: center; border-radius: 50%; color: #081018; font-size: 9px; font-weight: 950; background: var(--person-color); box-shadow: 0 0 10px color-mix(in srgb, var(--person-color) 55%, transparent); }
-    .suspect-name { min-width: 0; flex: 1; overflow: hidden; font-size: 11px; font-weight: 800; white-space: nowrap; text-overflow: ellipsis; }
-    .suspect-state { color: var(--faint); font-size: 11px; }
-    .victim-note { display: flex; align-items: center; gap: 8px; margin-top: 9px; padding: 8px 9px; border: 1px solid rgba(255,78,154,.22); border-radius: 9px; background: rgba(255,78,154,.055); color: #f5c8da; font-size: 11px; }
-    .victim-diamond { width: 14px; height: 14px; display: grid; place-items: center; border-radius: 3px; background: var(--pink); color: #fff; font-size: 8px; transform: rotate(45deg); }
-    .victim-diamond span { transform: rotate(-45deg); }
-    .clue-title { display: flex; align-items: center; gap: 8px; }
-    .clue-title h2 { margin: 0; font-size: 13px; }
-    .clue-text { min-height: 55px; margin: 11px 0 10px; padding: 11px 12px; border-left: 2px solid var(--cyan); border-radius: 0 9px 9px 0; background: rgba(89,244,232,.055); color: #e1ebf8; font-size: 13px; line-height: 1.5; }
-    .clue-rule { color: var(--muted); font-size: 10px; line-height: 1.45; }
-    .selected-tools { display: flex; gap: 7px; margin-top: 10px; }
-    .selected-tools .btn { flex: 1; min-height: 36px; font-size: 10px; }
-    .rules { margin-top: 13px; padding: 12px 14px; }
-    .rules h2 { margin: 0 0 7px; font-size: 12px; }
-    .rules ol { margin: 0; padding-left: 18px; color: #abb8cf; font-size: 11px; line-height: 1.6; }
-    .rules strong { color: #e7f3ff; }
-    .room-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-    .room-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 99px; padding: 5px 7px; color: #becbe0; font-size: 9px; }
-    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--dot); box-shadow: 0 0 8px var(--dot); }
-    .message { display: none; margin-top: 11px; padding: 10px 11px; border: 1px solid rgba(89,244,232,.2); border-radius: 10px; background: rgba(89,244,232,.07); color: #d8fffb; font-size: 11px; line-height: 1.45; }
-    .message.show { display: block; }
-    .message.error { border-color: rgba(255,78,154,.32); background: rgba(255,78,154,.075); color: #ffd6e5; }
-    .message.win { border-color: rgba(199,255,105,.45); background: rgba(199,255,105,.09); color: #e9ffc4; }
-    .footer { margin-top: 14px; color: #75829a; text-align: center; font-size: 9px; letter-spacing: .06em; }
-    @media (max-width: 620px) {
-      .page { padding-left: 10px; padding-right: 10px; }
-      .topline { margin-bottom: 10px; }
-      .hero { padding: 17px 15px 15px; border-radius: 16px 16px 6px 16px; }
-      .hero p { font-size: 12px; }
-      .layout { grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
-      .board-panel { padding: 11px; }
-      .right-column { gap: 10px; }
-      .roster-panel, .clue-panel { padding: 11px; }
-      .roster { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-      .suspect { flex-direction: column; justify-content: center; gap: 4px; padding: 6px 3px; min-height: 61px; }
-      .suspect-name { max-width: 100%; font-size: 9px; text-align: center; }
-      .suspect-state { position: absolute; display: none; }
-      .avatar { flex-basis: 26px; width: 26px; height: 26px; }
-      .board-hint { min-height: 28px; }
-      .rules { margin-top: 10px; }
+    .brief p { margin: 5px 0 8px; font-size: .88rem; line-height: 1.4; }
+    .roster { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+    .person { min-height: 47px; }
+    .clue { min-height: 87px; }
+    .clue-text { font-size: .89rem; }
+  }
+  @media (max-width: 355px), (max-height: 580px) {
+    .game { gap: 4px; }
+    .clue { min-height: 74px; }
+    .clue-text { font-size: .77rem; }
+    .person { min-height: 42px; }
+    .tool { min-height: 40px; }
+  }
+  @media (orientation: landscape) and (max-height: 480px) and (min-width: 575px) {
+    .game {
+      min-height: 330px;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 1fr);
+      grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+      grid-template-areas: "header header" "stage meta" "stage roster" "stage clue" "stage tools" "stage .";
+      column-gap: 12px;
     }
-    @media (min-width: 621px) {
-      .page { padding-top: 24px; }
-      .layout { grid-template-columns: minmax(0, 1.08fr) minmax(270px, .92fr); }
-    }
-    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
-  </style>
+  }
+</style>
 </head>
 <body>
-  <main class="page">
-    <div class="topline"><div class="brand">NÉON <span style="color:#ff4e9a">//</span> NOIR</div><div class="case-id">DOSSIER 01 · NIGHT CITY</div></div>
-    <header class="hero">
-      <div class="eyebrow">Enquête logique · Niveau pilote</div>
-      <h1>Le Dernier Set</h1>
-      <p>À minuit, le Gridclub a plongé dans le noir. <strong>Nova, la DJ, a été retrouvée morte.</strong> Replace les sept suspects dans la scène, puis découvre qui se trouvait seul avec elle.</p>
-      <div class="statusline"><span class="tag cyan">GRILLE 8 × 8</span><span class="tag">DIFFICULTÉ · INITIATION</span><span class="tag">7 SUSPECTS + 1 VICTIME</span></div>
-    </header>
-
-    <div class="layout">
-      <section class="panel board-panel" aria-labelledby="board-title">
-        <div class="section-head"><h2 id="board-title">Scène du Gridclub</h2><span class="small-label">Rangées 1–8 · Colonnes 1–8</span></div>
-        <div class="board-shell">
-          <div class="col-labels" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
-          <div class="board-row">
-            <div class="row-labels" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
-            <div id="board" class="board-grid" role="grid" aria-label="Grille de jeu 8 par 8"></div>
-          </div>
-        </div>
-        <p id="board-hint" class="board-hint" aria-live="polite"><strong>Choisis Aiko</strong>, puis touche une case libre pour la placer. Les rangées et colonnes occupées se barrent automatiquement.</p>
-        <div class="tools">
-          <button id="notes-button" class="btn" type="button" aria-pressed="false">✕ Mode notes</button>
-          <button id="hint-button" class="btn accent" type="button">✦ Indice</button>
-          <button id="check-button" class="btn primary" type="button">Vérifier la solution</button>
-          <button id="reset-button" class="btn subtle" type="button">Recommencer</button>
-        </div>
-        <div id="message" class="message" role="status" aria-live="polite"></div>
-      </section>
-
-      <div class="right-column">
-        <section class="panel roster-panel" aria-labelledby="suspects-title">
-          <div class="section-head"><h2 id="suspects-title">Suspects</h2><span id="progress" class="small-label">0 / 7 placés</span></div>
-          <div id="roster" class="roster"></div>
-          <div class="victim-note"><span class="victim-diamond"><span>V</span></span><span><strong>Nova · victime</strong> — position connue : rangée 4, colonne 4.</span></div>
-        </section>
-
-        <section class="panel clue-panel" aria-labelledby="clue-heading">
-          <div class="clue-title"><span id="clue-avatar" class="avatar" style="--person-color:#59f4e8">AI</span><h2 id="clue-heading">Indice d’Aiko</h2></div>
-          <p id="clue-text" class="clue-text"></p>
-          <div class="clue-rule">Touche un portrait pour lire son indice. Clique ensuite une case pour placer ou déplacer ce suspect.</div>
-          <div class="selected-tools"><button id="remove-button" class="btn subtle" type="button">Retirer sa pose</button><button id="clear-notes-button" class="btn subtle" type="button">Effacer les notes</button></div>
-        </section>
-      </div>
+<main class="game">
+  <header class="masthead">
+    <div>
+      <div class="series">NÉON <span class="slashes">//</span> NOIR <span id="case-number"></span></div>
+      <h1 id="case-title"></h1>
     </div>
+    <div class="head-actions">
+      <button class="pill" id="rules" type="button">Règles</button>
+      <button class="pill dossiers" id="levels" type="button">Dossiers</button>
+    </div>
+  </header>
+  <div class="meta">
+    <div class="plan-caption">
+      <div class="technical" id="plan-title"></div>
+      <p id="status" class="status" role="status"></p>
+    </div>
+    <button class="pill legend-button" id="legend" type="button">Objets et pièces</button>
+  </div>
+  <section class="stage" aria-label="Plan de la scène">
+    <div id="board" class="board" role="group" aria-label="Grille de 8 rangées et 8 colonnes"></div>
+  </section>
+  <aside class="brief" aria-label="Résumé du dossier">
+    <span class="technical" id="brief-difficulty"></span>
+    <p id="brief-story"></p>
+    <div class="room-key" id="brief-rooms"></div>
+  </aside>
+  <div class="roster" id="roster" role="group" aria-label="Personnages à placer"></div>
+  <section class="clue" aria-label="Indice du personnage sélectionné">
+    <div class="clue-header">
+      <div class="clue-title"><span id="clue-name"></span> <span class="technical" id="clue-state"></span></div>
+      <button type="button" class="remove" id="remove">Retirer</button>
+    </div>
+    <div class="clue-content">
+      <span class="clue-glyphs" id="clue-glyphs" aria-hidden="true"></span>
+      <p class="clue-text" id="clue-text"></p>
+    </div>
+  </section>
+  <div class="tools" role="group" aria-label="Actions de jeu">
+    <button class="tool" id="notes" type="button" aria-pressed="false">✕ Notes</button>
+    <button class="tool" id="hint" type="button">✦ Indice</button>
+    <button class="tool primary" id="check" type="button">✓ Vérifier</button>
+  </div>
+</main>
+<dialog id="dialog" aria-labelledby="dialog-title">
+  <div class="dialog-head">
+    <h2 id="dialog-title"></h2>
+    <button id="close-dialog" class="close" type="button" aria-label="Fermer">×</button>
+  </div>
+  <div id="dialog-body" class="dialog-body"></div>
+</dialog>
+<script>
+"use strict";
 
-    <section class="panel rules">
-      <h2>Règles de l’enquête</h2>
-      <ol>
-        <li>Place chaque suspect une seule fois. <strong>Une personne par rangée et par colonne</strong>, victime comprise.</li>
-        <li>Les cases assombries sont bloquées par une pose. Les objets dessinés ne peuvent pas être occupés.</li>
-        <li>La personne seule avec Nova dans le même secteur est la coupable. Les quatre secteurs sont séparés par les lignes épaisses.</li>
-      </ol>
-      <div class="room-legend" aria-label="Légende des secteurs">
-        <span class="room-chip"><i class="dot" style="--dot:#a78bfa"></i>Nœud 09</span>
-        <span class="room-chip"><i class="dot" style="--dot:#ff4e9a"></i>Cabine DJ</span>
-        <span class="room-chip"><i class="dot" style="--dot:#59d8e8"></i>Dock 13</span>
-        <span class="room-chip"><i class="dot" style="--dot:#8bdc9d"></i>Serre Chrome</span>
-      </div>
-    </section>
-    <div class="footer">UNE AFFAIRE ORIGINALE · NIVEAU 01 · CONÇU POUR LE JEU SUR MOBILE</div>
-  </main>
+const cases = [
+  {"id":"01","title":"Le Dernier Set","venue":"Gridclub","difficulty":"Initiation","intro":"En plein set de Nova, le Gridclub plonge dans le noir. À la reprise du courant, la DJ est morte. Les capteurs de proximité du club ont enregistré les derniers déplacements.","rooms":["AAABBBBB","AAAABBBB","CAAAABBD","CCAAADDD","CCCCDDDD","CCCEDDDD","CCCEEEED","CCEEEEEE"],"roomNames":{"A":"Serveurs","B":"Régie","C":"Bar","D":"Atelier","E":"Loges"},"objects":{"2":"seat","9":"seat","21":"seat","36":"seat","53":"seat","16":"bench","34":"bench","58":"bench","14":"rug","39":"rug","44":"rug","60":"rug","13":"terminal","17":"terminal","30":"terminal","38":"terminal","45":"terminal","61":"terminal","24":"dispenser","42":"dispenser","59":"dispenser","5":"screen","37":"screen","7":"speaker","15":"speaker","51":"speaker","52":"speaker"},"people":[{"id":"aiko","name":"Aiko","clue":"Sur un fauteuil, à côté d’un terminal.","items":["seat","terminal"]},{"id":"brix","name":"Brix","clue":"À côté d’un écran.","items":["screen"]},{"id":"coda","name":"Coda","clue":"Sur une banquette, à côté d’un distributeur.","items":["bench","dispenser"]},{"id":"dax","name":"Dax","clue":"À côté d’un terminal, dans la même pièce qu’Emi.","items":["terminal"]},{"id":"emi","name":"Emi","clue":"Sur un tapis, à côté d’un terminal.","items":["rug","terminal"]},{"id":"fox","name":"Fox","clue":"À côté d’une enceinte.","items":["speaker"]},{"id":"gaku","name":"Gaku","clue":"À côté d’un distributeur, dans la même pièce que Coda.","items":["dispenser"]},{"id":"nova","name":"Nova","clue":"Sur un tapis, à côté d’une enceinte.","items":["rug","speaker"]}],"victim":"nova","solution":{"aiko":9,"brix":6,"coda":16,"dax":29,"emi":39,"fox":43,"gaku":50,"nova":60},"hints":["Cherche une colonne où un seul personnage a une case compatible avec son indice. Regarde près des enceintes.","Coda et Gaku ne peuvent se trouver dans une pièce où toutes les cases près du distributeur partagent la rangée de la banquette.","Compare les tapis possibles pour Emi et Nova. Pour chaque option d’Emi, vérifie qu’il reste une case près d’un terminal pour Dax dans la même pièce."]},
+  {"id":"02","title":"Le Quai fantôme","venue":"Station Nadir","difficulty":"Facile","intro":"Une rame vide rentre au quai. Sa conductrice, Sol, a été retrouvée morte dans la station.","rooms":["AABBBBBB","AAABBBBB","AAABBBCC","AAACCCCC","DCCCCCCC","DDDCCCEE","DDDDCEEE","DDDCCEEE"],"roomNames":{"A":"Cabine","B":"Quai","C":"Hall","D":"Atelier","E":"Fret"},"objects":{"0":"seat","1":"dispenser","3":"bench","6":"screen","8":"screen","9":"screen","14":"seat","15":"bench","22":"speaker","23":"bench","26":"dispenser","27":"speaker","29":"terminal","30":"terminal","33":"speaker","37":"rug","38":"rug","39":"seat","40":"terminal","41":"bench","42":"dispenser","47":"screen","48":"rug","52":"rug","59":"dispenser"},"people":[{"id":"ada","name":"Ada","clue":"À côté d’un écran.","items":["screen"]},{"id":"bash","name":"Bash","clue":"À côté d’une banquette et d’un terminal.","items":["bench","terminal"]},{"id":"chim","name":"Chim","clue":"Sur un fauteuil.","items":["seat"]},{"id":"drift","name":"Drift","clue":"À côté d’un tapis et d’un terminal.","items":["rug","terminal"]},{"id":"enzo","name":"Enzo","clue":"Une enceinte dans sa pièce, mais aucune à côté.","items":["speaker"]},{"id":"faye","name":"Faye","clue":"À côté d’un tapis.","items":["rug"]},{"id":"glitch","name":"Glitch","clue":"À côté d’un terminal.","items":["terminal"]},{"id":"sol","name":"Sol","clue":"À côté d’une banquette, seule avec le coupable.","items":["bench"]}],"victim":"sol","solution":{"ada":17,"bash":31,"chim":14,"drift":37,"enzo":43,"faye":60,"glitch":48,"sol":2},"hints":["Commence par Bash. Une seule case touche à la fois un terminal et une banquette de la même pièce.","Après la pose de Bash, cherche une rangée dont les seules cases possibles sont près d’un écran. Ada doit occuper cette rangée.","Drift touche à la fois un tapis et un terminal. Parmi ces cases, barre celles dont la colonne est déjà prise."]},
+  {"id":"03","title":"La Greffe de minuit","venue":"Clinique Mirage","difficulty":"Intermédiaire","intro":"Un implant disparaît du bloc. Sélène, responsable de son transfert, est retrouvée morte.","rooms":["AAAABBBC","AAADBBCC","AADDDBCC","AADDDCCC","EEDDDCFF","EEEDDFFF","EEEEFFFF","EEEFFFFF"],"roomNames":{"A":"Accueil","B":"Labo","C":"Chambre froide","D":"Bloc","E":"Pharmacie","F":"Salle blanche"},"objects":{"3":"rug","10":"bench","11":"seat","14":"seat","16":"seat","17":"rug","19":"bench","20":"terminal","23":"dispenser","25":"speaker","27":"dispenser","28":"rug","29":"seat","37":"rug","38":"speaker","41":"bench","42":"dispenser","44":"screen","52":"terminal","53":"screen","56":"speaker","58":"terminal","61":"bench"},"people":[{"id":"argo","name":"Argo","clue":"Un écran dans sa pièce, mais aucun à côté.","items":["screen"]},{"id":"byte","name":"Byte","clue":"À côté d’un fauteuil.","items":["seat"]},{"id":"cipher","name":"Cipher","clue":"À côté d’un écran.","items":["screen"]},{"id":"delta","name":"Delta","clue":"Sur une banquette, à côté d’un distributeur.","items":["bench","dispenser"]},{"id":"echo","name":"Echo","clue":"À côté d’une banquette.","items":["bench"]},{"id":"flux","name":"Flux","clue":"Sur un fauteuil, dans la même pièce que Cipher.","items":["seat"]},{"id":"ghost","name":"Ghost","clue":"À côté d’un tapis, dans la même pièce qu’Echo.","items":["rug"]},{"id":"selene","name":"Sélène","clue":"Sur une banquette, seule avec le coupable.","items":["bench"]}],"victim":"selene","solution":{"argo":55,"byte":30,"cipher":36,"delta":41,"echo":2,"flux":11,"ghost":16,"selene":61},"hints":["Flux a besoin d’un fauteuil. Cipher doit toucher un écran dans la même pièce. Seul le Bloc réunit ces deux possibilités.","Le fauteuil de Flux condamne l’une des deux cases voisines de l’écran du Bloc. Place Cipher sur l’autre.","Les deux banquettes voisines d’un distributeur sont les seules options de Delta. La pose de Flux bloque celle du Bloc."]},
+  {"id":"04","title":"Le Pli noir","venue":"Tri postal Fret 8","difficulty":"Intermédiaire","intro":"Une capsule de données a disparu de Fret 8 pendant la relève. Lin, qui devait en signer la livraison, a été retrouvée morte. Les balises du centre de tri livrent leurs derniers relevés.","rooms":["AAABBBBB","AAABBBBB","AAAACBBB","DDACCCBB","DDDCCCCE","DDDDCCEE","DDDDCEEE","DDDDEEEE"],"roomNames":{"A":"Sas","B":"Tri","C":"Contrôle","D":"Quai","E":"Consigne"},"objects":{"0":"speaker","5":"bench","6":"seat","8":"terminal","9":"rug","10":"screen","15":"dispenser","18":"speaker","24":"bench","30":"terminal","36":"bench","37":"speaker","40":"screen","41":"seat","43":"terminal","45":"screen","48":"rug","51":"screen","59":"dispenser","60":"dispenser","62":"screen"},"people":[{"id":"sumi","name":"Sumi","clue":"À côté d’un tapis.","items":["rug"]},{"id":"kern","name":"Kern","clue":"À côté d’un fauteuil, dans une pièce sans enceinte.","items":["seat","speaker"]},{"id":"pia","name":"Pia","clue":"À côté d’un terminal.","items":["terminal"]},{"id":"ivo","name":"Ivo","clue":"À côté d’un distributeur et d’un fauteuil.","items":["dispenser","seat"]},{"id":"mina","name":"Mina","clue":"À côté d’un distributeur, sans tapis adjacent.","items":["dispenser","rug"]},{"id":"holt","name":"Holt","clue":"Sur une banquette, à côté d’une enceinte.","items":["bench","speaker"]},{"id":"rin","name":"Rin","clue":"À côté d’une enceinte.","items":["speaker"]},{"id":"lin","name":"Lin","clue":"Sur un tapis.","items":["rug"]}],"victim":"lin","solution":{"sumi":1,"kern":42,"pia":31,"ivo":14,"mina":61,"holt":36,"rin":19,"lin":48},"hints":["Compare les banquettes. Une seule touche une enceinte dans la même pièce.","Une fois Holt placé, cherche une colonne où un seul relevé correspond encore à une case.","Lin a deux tapis possibles. Une fois Ivo placé, vérifie lequel reste disponible."]},
+  {"id":"05","title":"La Mue de Chrome","venue":"Atelier Miroir","difficulty":"Difficile","intro":"Pendant une greffe de chrome clandestine, l’atelier Miroir coupe le réseau. Au redémarrage, le mécanicien Silex est retrouvé mort. Les appareils ont gardé la trace des déplacements.","rooms":["AABBBBBB","AAABBCBB","AAAAACCC","DAAAACCE","DDDCCCEE","DDFFCCEE","DDFFFEEE","DFFFFEEE"],"roomNames":{"A":"Accueil","B":"Atelier","C":"Diagnostic","D":"Archives","E":"Bloc","F":"Réveil"},"objects":{"0":"dispenser","4":"terminal","5":"dispenser","8":"rug","10":"rug","13":"bench","15":"speaker","20":"terminal","21":"speaker","25":"rug","27":"seat","28":"speaker","34":"rug","35":"terminal","36":"seat","37":"screen","38":"speaker","39":"dispenser","40":"dispenser","41":"rug","42":"seat","46":"rug","56":"seat","57":"bench","58":"rug"},"people":[{"id":"nila","name":"Nila","clue":"À côté d’une enceinte, dans une pièce sans fauteuil.","items":["speaker","seat"]},{"id":"tao","name":"Tao","clue":"Sur un tapis, dans une pièce avec un fauteuil.","items":["rug","seat"]},{"id":"rook","name":"Rook","clue":"À côté d’un fauteuil.","items":["seat"]},{"id":"vera","name":"Véra","clue":"Sur un fauteuil.","items":["seat"]},{"id":"jo","name":"Jo","clue":"Sur un fauteuil, dans une pièce avec une enceinte.","items":["seat","speaker"]},{"id":"isak","name":"Isak","clue":"Sur une banquette.","items":["bench"]},{"id":"uma","name":"Uma","clue":"À côté d’un tapis.","items":["rug"]},{"id":"sol","name":"Silex","clue":"À côté d’une enceinte, dans une pièce avec un écran.","items":["speaker","screen"]}],"victim":"sol","solution":{"nila":7,"tao":8,"rook":19,"vera":42,"jo":36,"isak":57,"uma":54,"sol":29},"hints":["Cherche la rangée où un seul relevé peut correspondre au mobilier. Regarde les cases voisines des enceintes.","L’écran identifie la pièce de Silex. Pour chaque placement possible, garde exactement une autre personne avec lui.","Si Isak prend la banquette du Diagnostic, il bloque deux cases possibles de Silex. Dans cette hypothèse, personne d’autre ne peut rester dans la pièce."]},
+  {"id":"06","title":"Le Signal pirate","venue":"Relais Obsidienne","difficulty":"Intermédiaire","intro":"Un signal pirate éteint le relais Obsidienne pendant sa dernière diffusion. L’opératrice Ione est tuée. Les journaux audio du bâtiment retracent les mouvements de l’équipe.","rooms":["AAABBBBB","AAABBCCC","AAAABCCC","DDAABBCC","DDAEEBCC","DDEEEFFF","DDDEEEFF","DDDDEEFF"],"roomNames":{"A":"Archive","B":"Passerelle","C":"Antenne","D":"Quai","E":"Sas","F":"Noyau"},"objects":{"2":"seat","3":"seat","12":"seat","13":"seat","32":"seat","33":"seat","44":"seat","54":"seat","0":"bench","31":"bench","35":"bench","49":"bench","46":"bench","1":"rug","8":"rug","45":"rug","52":"rug","5":"rug","24":"rug","14":"rug","4":"terminal","30":"terminal","53":"terminal","48":"terminal","47":"terminal","9":"screen","21":"screen","15":"screen","25":"dispenser","50":"dispenser","59":"dispenser","11":"dispenser","6":"dispenser","43":"dispenser","63":"dispenser","17":"dispenser","10":"dispenser","23":"speaker","16":"speaker"},"people":[{"id":"ada","name":"Alba","clue":"Sur un fauteuil, dans une pièce qui contient exactement deux distributeurs.","items":["seat","dispenser"]},{"id":"blue","name":"Blue","clue":"Sur un tapis, à côté d’un écran.","items":["rug","screen"]},{"id":"cyra","name":"Cyra","clue":"Sur une banquette, à côté d’un terminal.","items":["bench","terminal"]},{"id":"driss","name":"Driss","clue":"Sur un fauteuil, à côté d’un distributeur et dans la même pièce que Gris.","items":["seat","dispenser"]},{"id":"ezra","name":"Ezra","clue":"Sur un tapis, à côté d’une banquette.","items":["rug","bench"]},{"id":"fenn","name":"Fenn","clue":"Sur un tapis, à côté d’un fauteuil.","items":["rug","seat"]},{"id":"gris","name":"Gris","clue":"À côté d’exactement deux distributeurs.","items":["dispenser"]},{"id":"ione","name":"Ione","clue":"À côté d’un écran et d’une enceinte.","items":["screen","speaker"]}],"victim":"ione","solution":{"ada":3,"blue":8,"cyra":31,"driss":33,"ezra":45,"fenn":52,"gris":58,"ione":22},"hints":["Repère les cases qui touchent deux distributeurs dans une même pièce. Puis cherche une rangée où un seul personnage a une case possible.","Quand Gris est placé, garde pour Driss les fauteuils voisins d’un distributeur dans la pièce de Gris.","Blue et Ezra peuvent viser le même tapis dans l’Archive. Cherche d’abord où Ione peut toucher à la fois un écran et une enceinte."]}
+];
+const objectTypes = {
+  seat: {
+    name: "Fauteuil", occupiable: true,
+    art: '<rect x="10" y="5" width="20" height="28" rx="7" fill="#eae5f7"/><path d="M11 17h18v12H11z" fill="#ac93f3"/><rect x="5" y="14" width="7" height="17" rx="3" fill="#d4c0ff"/><rect x="28" y="14" width="7" height="17" rx="3" fill="#d4c0ff"/><path d="M12 32h16M10 10h20" stroke-width="1.4"/>'
+  },
+  bench: {
+    name: "Banquette", occupiable: true,
+    art: '<rect x="3" y="9" width="34" height="22" rx="5" fill="#713355"/><path d="M7 15h26v10H7z" fill="#ff9bc9"/><path d="M7 10v19m26-19v19M20 15v10" stroke-width="1.4"/><path d="M8 32v2m24-2v2"/>'
+  },
+  rug: {
+    name: "Tapis", occupiable: true,
+    art: '<rect x="6" y="6" width="28" height="28" rx="2" fill="#e1fa85"/><path d="M20 10l10 10-10 10-10-10z" fill="#7ba332"/><path d="M20 15l5 5-5 5-5-5z" fill="#f1f9c0"/><path d="M10 4v3m6-3v3m8-3v3m6-3v3m-20 26v3m6-3v3m8-3v3m6-3v3" stroke-width="1.4"/>'
+  },
+  terminal: {
+    name: "Terminal", occupiable: false,
+    art: '<path d="M5 6h30v27H5z" fill="#2d3b55"/><rect x="8" y="9" width="24" height="12" rx="1" fill="#73f0d6"/><path d="M12 13l4 3-4 2m8 0h7m-17 8h20m-18 3h16" fill="none" stroke-width="1.5"/><path d="M4 34h32"/>'
+  },
+  dispenser: {
+    name: "Distributeur", occupiable: false,
+    art: '<rect x="9" y="3" width="22" height="34" rx="3" fill="#eb7d57"/><rect x="12" y="7" width="16" height="16" rx="2" fill="#fdf2c6"/><path d="M17 9v12m6-12v12m-10-7h14" stroke-width="1.3"/><rect x="14" y="27" width="12" height="5" rx="1" fill="#253551"/>'
+  },
+  screen: {
+    name: "Écran", occupiable: false,
+    art: '<path d="M6 29h28l3 5H3z" fill="#425572"/><rect x="3" y="6" width="34" height="23" rx="3" fill="#384c6d"/><rect x="6" y="9" width="28" height="17" rx="2" fill="#a2cfff"/><path d="M9 20l6-5 5 3 5-5 5 4" fill="none" stroke-width="1.5"/><path d="M17 32h6" stroke="#d5f3ff" stroke-width="1.4"/>'
+  },
+  speaker: {
+    name: "Enceinte", occupiable: false,
+    art: '<rect x="10" y="3" width="20" height="34" rx="3" fill="#362b50"/><circle cx="20" cy="13" r="4" fill="#fab8e7"/><circle cx="20" cy="25" r="7" fill="#c49df9"/><circle cx="20" cy="25" r="3" fill="#f9d0ff"/><path d="M13 35h14" stroke="#c49df9" stroke-width="1.3"/>'
+  }
+};
+const personColors = ["#9cf6e4", "#ffcb84", "#ffb2d9", "#beb7ff", "#f4ea83", "#b8ec94", "#a9d4ff", "#ff9c9b"];
+const storageKey = "neon-noir-dossiers-v2";
+const byId = id => document.getElementById(id);
+const board = byId("board");
+const roster = byId("roster");
+const dialog = byId("dialog");
+const dialogBody = byId("dialog-body");
+const status = byId("status");
+let saved = readSaved();
+let currentCase;
+let placements;
+let notes;
+let selected;
+let noteMode;
+let checked;
+let solved;
+let hintIndex;
+let roomIds;
+let roomStamps;
+let cells;
+let portraits;
 
-  <script>
-    (() => {
-      const suspects = [
-        { id: "aiko", name: "Aiko", initials: "AI", color: "#59f4e8", clue: "Aiko a été aperçue dans le secteur Nœud 09." },
-        { id: "brix", name: "Brix", initials: "BR", color: "#ffad5c", clue: "Brix était dans la rangée la plus au nord de la Cabine DJ." },
-        { id: "coda", name: "Coda", initials: "CO", color: "#ff79bb", clue: "Coda se trouvait exactement deux rangées au sud du drone rouge." },
-        { id: "dax", name: "Dax", initials: "DA", color: "#9daeff", clue: "Dax était juste à l’ouest de la moto accidentée, sur la même rangée." },
-        { id: "emi", name: "Emi", initials: "EM", color: "#f3e37a", clue: "Emi était une rangée au sud et deux colonnes à l’est de Dax." },
-        { id: "fox", name: "Fox", initials: "FO", color: "#c6ff75", clue: "Fox se trouvait exactement deux rangées au sud du relais cyan." },
-        { id: "gaku", name: "Gaku", initials: "GA", color: "#c39bff", clue: "Gaku était immédiatement à l’est de l’orchidée bleue." }
-      ];
-      const victim = { id: "nova", name: "Nova", initials: "NV", cell: 27 };
-      const solution = { aiko: 9, brix: 5, coda: 23, dax: 32, emi: 42, fox: 52, gaku: 62 };
-      const objects = {
-        7: { icon: "🛸", label: "Drone rouge", title: "Drone rouge · case interdite" },
-        33: { icon: "🏍️", label: "Moto accidentée", title: "Moto accidentée · case interdite" },
-        36: { icon: "💠", label: "Relais cyan", title: "Relais cyan · case interdite" },
-        61: { icon: "🪴", label: "Orchidée bleue", title: "Orchidée bleue · case interdite" }
-      };
-      const roomNames = { node: "Nœud 09", booth: "Cabine DJ", dock: "Dock 13", garden: "Serre Chrome" };
-      const roomStart = { 0: "Nœud 09", 4: "Cabine DJ", 32: "Dock 13", 36: "Serre Chrome" };
-      const hintSteps = [
-        "Les indices de Coda, Dax, Emi, Fox et Gaku localisent déjà cinq suspects. Nova occupe aussi la rangée 4 et la colonne 4.",
-        "Il reste deux suspects pour deux rangées et deux colonnes : Aiko est dans Nœud 09 ; Brix est dans la rangée la plus au nord de la Cabine DJ.",
-        "Les colonnes restantes sont 2 et 6. Nœud 09 contient la colonne 2 ; la Cabine DJ, la colonne 6. Brix prend la rangée 1, Aiko la rangée 2."
-      ];
-      const board = document.getElementById("board");
-      const roster = document.getElementById("roster");
-      const message = document.getElementById("message");
-      const boardHint = document.getElementById("board-hint");
-      const clueText = document.getElementById("clue-text");
-      const clueHeading = document.getElementById("clue-heading");
-      const clueAvatar = document.getElementById("clue-avatar");
-      let placements = { nova: victim.cell };
-      let notes = new Set();
-      let selected = "aiko";
-      let noteMode = false;
-      let hintIndex = 0;
-      let checked = false;
+function readSaved() {
+  try {
+    return JSON.parse(localStorage.getItem(storageKey)) || {};
+  } catch {
+    return {};
+  }
+}
 
-      function roomFor(cell) {
-        const row = Math.floor(cell / 8), col = cell % 8;
-        if (row < 4 && col < 4) return "node";
-        if (row < 4) return "booth";
-        if (col < 4) return "dock";
-        return "garden";
-      }
-      function person(id) { return id === "nova" ? victim : suspects.find(s => s.id === id); }
-      function positionLabel(cell) { return `rangée ${Math.floor(cell / 8) + 1}, colonne ${cell % 8 + 1}`; }
-      function announce(text, kind = "") {
-        message.textContent = text;
-        message.className = `message show ${kind}`.trim();
-      }
-      function hideMessage() { message.textContent = ""; message.className = "message"; }
-      function selectedPerson() { return suspects.find(s => s.id === selected); }
-      function isBlocked(cell, exceptId = selected) {
-        const row = Math.floor(cell / 8), col = cell % 8;
-        return Object.entries(placements).some(([id, placed]) => id !== exceptId && (Math.floor(placed / 8) === row || placed % 8 === col));
-      }
-      function ownerAt(cell) { return Object.entries(placements).find(([, placed]) => placed === cell)?.[0] || null; }
-      function isForbiddenObject(cell) { return Object.hasOwn(objects, cell); }
-      function renderRoster() {
-        roster.innerHTML = "";
-        for (const suspect of suspects) {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = `suspect ${selected === suspect.id ? "selected" : ""}`;
-          button.setAttribute("aria-pressed", selected === suspect.id ? "true" : "false");
-          button.setAttribute("aria-label", `${suspect.name}${placements[suspect.id] !== undefined ? ", placé" : ", à placer"}`);
-          button.innerHTML = `<span class="avatar" style="--person-color:${suspect.color}">${suspect.initials}</span><span class="suspect-name">${suspect.name}</span><span class="suspect-state">${placements[suspect.id] !== undefined ? "●" : "○"}</span>`;
-          button.addEventListener("click", () => {
-            selected = suspect.id;
-            checked = false;
-            hideMessage();
-            render();
-          });
-          roster.append(button);
-        }
-        const count = suspects.filter(s => placements[s.id] !== undefined).length;
-        document.getElementById("progress").textContent = `${count} / 7 placés`;
-        const current = selectedPerson();
-        clueHeading.textContent = `Indice de ${current.name}`;
-        clueText.textContent = current.clue;
-        clueAvatar.textContent = current.initials;
-        clueAvatar.style.setProperty("--person-color", current.color);
-        document.getElementById("remove-button").disabled = placements[selected] === undefined;
-      }
-      function renderBoard() {
-        board.innerHTML = "";
-        for (let cell = 0; cell < 64; cell++) {
-          const row = Math.floor(cell / 8), col = cell % 8;
-          const room = roomFor(cell);
-          const owner = ownerAt(cell);
-          const blocked = !owner && isBlocked(cell);
-          const forbidden = !owner && isForbiddenObject(cell);
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = `cell ${room}${row === 0 || row === 4 ? " room-top" : ""}${col === 0 || col === 4 ? " room-left" : ""}${col === 3 || col === 7 ? " room-right" : ""}${row === 3 || row === 7 ? " room-bottom" : ""}`;
-          if (blocked) button.classList.add("blocked");
-          if (forbidden) button.classList.add("object-only");
-          if (notes.has(cell) && !owner) button.classList.add("note-mark");
-          if (owner === selected) button.classList.add("is-selected");
-          if (checked && owner && owner !== "nova") button.classList.add(placements[owner] === solution[owner] ? "correct-cell" : "wrong-cell");
-          button.setAttribute("role", "gridcell");
-          const ownerName = owner ? person(owner).name : "case vide";
-          button.setAttribute("aria-label", `Rangée ${row + 1}, colonne ${col + 1}, ${roomNames[room]}${owner ? `, ${ownerName}` : ""}${objects[cell] ? `, ${objects[cell].title}` : ""}${blocked ? ", bloquée par une autre pose" : ""}`);
-          const zoneName = roomStart[cell];
-          if (zoneName) {
-            const label = document.createElement("span"); label.className = "room-label"; label.textContent = zoneName; button.append(label);
-          }
-          if (objects[cell]) {
-            const object = document.createElement("span"); object.className = "object-icon"; object.textContent = objects[cell].icon; object.title = objects[cell].title; button.append(object);
-            const objectLabel = document.createElement("span"); objectLabel.className = "object-label"; objectLabel.textContent = objects[cell].label; button.append(objectLabel);
-          }
-          if (blocked) {
-            const x = document.createElement("span"); x.className = "block-x"; x.setAttribute("aria-hidden", "true"); x.textContent = "×"; button.append(x);
-          }
-          if (owner) {
-            const who = person(owner);
-            const token = document.createElement("span");
-            token.className = `person-token ${owner === "nova" ? "victim" : ""}`;
-            token.style.setProperty("--person-color", who.color || "#ff4e9a");
-            token.innerHTML = `<span>${who.initials}</span>`;
-            button.append(token);
-          }
-          button.addEventListener("click", () => handleCell(cell));
-          board.append(button);
-        }
-      }
-      function render() {
-        renderRoster();
-        renderBoard();
-        const current = selectedPerson();
-        boardHint.innerHTML = noteMode
-          ? `<strong>Mode notes</strong> · touche une case vide pour poser ou retirer une marque.`
-          : `<strong>${current.name}</strong> sélectionné${placements[selected] !== undefined ? " · touche une case libre pour déplacer ce suspect" : " · touche une case libre pour le placer"}.`;
-        document.getElementById("notes-button").classList.toggle("active", noteMode);
-        document.getElementById("notes-button").setAttribute("aria-pressed", noteMode ? "true" : "false");
-      }
-      function handleCell(cell) {
-        const owner = ownerAt(cell);
-        if (noteMode) {
-          if (owner) { announce(`${person(owner).name} occupe déjà cette case.`, "error"); return; }
-          if (notes.has(cell)) notes.delete(cell); else notes.add(cell);
-          checked = false; hideMessage(); render(); return;
-        }
-        if (owner) {
-          if (owner === "nova") { announce("Nova est déjà fixée à la rangée 4, colonne 4."); return; }
-          if (owner !== selected) { selected = owner; checked = false; hideMessage(); render(); }
-          else announce(`${person(owner).name} est déjà sur cette case. Choisis une autre case pour la déplacer.`);
-          return;
-        }
-        if (isForbiddenObject(cell)) { announce("Cette case est occupée par un élément du décor.", "error"); return; }
-        if (isBlocked(cell)) { announce("Cette case est barrée par une personne déjà placée dans la même rangée ou colonne.", "error"); return; }
-        placements[selected] = cell;
-        notes.delete(cell);
-        checked = false;
-        hideMessage();
-        render();
-      }
-      document.getElementById("notes-button").addEventListener("click", () => { noteMode = !noteMode; hideMessage(); render(); });
-      document.getElementById("remove-button").addEventListener("click", () => {
-        if (placements[selected] === undefined) return;
-        delete placements[selected]; checked = false; hideMessage(); render();
-      });
-      document.getElementById("clear-notes-button").addEventListener("click", () => { notes.clear(); hideMessage(); render(); });
-      document.getElementById("hint-button").addEventListener("click", () => {
-        const text = hintSteps[Math.min(hintIndex, hintSteps.length - 1)];
-        hintIndex = Math.min(hintIndex + 1, hintSteps.length - 1);
-        announce(`Indice ${Math.min(hintIndex, hintSteps.length)} / 3 · ${text}`);
-      });
-      document.getElementById("check-button").addEventListener("click", () => {
-        const missing = suspects.filter(s => placements[s.id] === undefined);
-        if (missing.length) {
-          announce(`Il reste ${missing.length} suspect${missing.length > 1 ? "s" : ""} à placer : ${missing.map(s => s.name).join(", ")}.`, "error");
-          return;
-        }
-        checked = true;
-        const wrong = suspects.filter(s => placements[s.id] !== solution[s.id]);
-        render();
-        if (wrong.length) {
-          announce(`${wrong.length} pose${wrong.length > 1 ? "s" : ""} à revoir : ${wrong.map(s => s.name).join(", ")}. Les poses correctes sont encadrées en vert.`, "error");
-          return;
-        }
-        const killer = suspects.find(s => roomFor(solution[s.id]) === roomFor(victim.cell));
-        announce(`Affaire résolue ! ${killer.name} se trouvait seule avec Nova dans le secteur ${roomNames[roomFor(victim.cell)]}. ${killer.name} est la coupable.`, "win");
-      });
-      document.getElementById("reset-button").addEventListener("click", () => {
-        placements = { nova: victim.cell }; notes.clear(); selected = "aiko"; noteMode = false; hintIndex = 0; checked = false; hideMessage(); render();
-      });
+function save() {
+  saved.active = currentCase.id;
+  saved[currentCase.id] = { placements, notes: [...notes], solved, hintIndex };
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(saved));
+  } catch {
+    // The standalone page also works when browser storage is unavailable.
+  }
+}
+
+function make(tag, className, text) {
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  if (text) el.textContent = text;
+  return el;
+}
+
+function glyph(type) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 40 40");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("stroke", "#121a28");
+  svg.setAttribute("stroke-width", "2");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.innerHTML = objectTypes[type].art;
+  return svg;
+}
+
+function row(cell) { return Math.floor(cell / 8); }
+function col(cell) { return cell % 8; }
+function room(cell) { return currentCase.rooms[row(cell)][col(cell)]; }
+function objectAt(cell) { return objectTypes[currentCase.objects[cell]]; }
+function person(id) { return currentCase.people.find(item => item.id === id); }
+function personIndex(id) { return currentCase.people.findIndex(item => item.id === id); }
+function initials(name) { return [...name].slice(0, 2).join("").toUpperCase(); }
+function ownerAt(cell) { return Object.keys(placements).find(id => placements[id] === cell); }
+
+function blocks(cell, except) {
+  return Object.entries(placements).some(([id, at]) =>
+    id !== except && (row(at) === row(cell) || col(at) === col(cell)));
+}
+
+function setStatus(text, kind) {
+  const count = Object.keys(placements).length;
+  status.textContent = text || (count + " / 8 placés" + (noteMode ? " · Mode notes" : ""));
+  status.dataset.kind = kind || "";
+}
+
+function roomKey() {
+  const fragment = document.createDocumentFragment();
+  for (const [i, id] of roomIds.entries()) {
+    const chip = make("span", "room-chip");
+    chip.append(make("b", "floor-" + i, id), document.createTextNode(currentCase.roomNames[id]));
+    fragment.append(chip);
+  }
+  return fragment;
+}
+
+function loadCase(item) {
+  currentCase = item;
+  const progress = saved[item.id] || {};
+  placements = { ...progress.placements };
+  notes = new Set(progress.notes || []);
+  solved = Boolean(progress.solved);
+  hintIndex = Number.isInteger(progress.hintIndex) ? progress.hintIndex : 0;
+  selected = item.people.find(p => placements[p.id] === undefined)?.id || item.people[0].id;
+  noteMode = false;
+  checked = false;
+  roomIds = Object.keys(item.roomNames);
+  const map = item.rooms.join("");
+  roomStamps = new Map(roomIds.map(id => {
+    const index = [...map].findIndex((value, at) => value === id && !objectAt(at));
+    return [index === -1 ? map.indexOf(id) : index, id];
+  }));
+  byId("case-number").textContent = " / " + item.id;
+  byId("case-title").textContent = item.title;
+  byId("plan-title").textContent = item.venue + " · 8 × 8";
+  byId("brief-difficulty").textContent = "Dossier " + item.id + " · " + item.difficulty;
+  byId("brief-story").textContent = item.intro;
+  byId("brief-rooms").replaceChildren(roomKey());
+  document.title = item.title + " · Néon Noir";
+  buildBoard();
+  buildRoster();
+  render();
+  save();
+}
+
+function buildBoard() {
+  const fragment = document.createDocumentFragment();
+  cells = Array.from({ length: 64 }, (_, index) => {
+    const button = make("button", "cell floor-" + roomIds.indexOf(room(index)));
+    button.type = "button";
+    if (col(index) < 7 && room(index + 1) !== room(index)) button.style.setProperty("--wall-right", "3px");
+    if (row(index) < 7 && room(index + 8) !== room(index)) button.style.setProperty("--wall-bottom", "3px");
+    const type = currentCase.objects[index];
+    const object = objectAt(index);
+    if (object) {
+      const art = make("span", "object");
+      art.append(glyph(type));
+      button.append(art);
+      button.classList.add("has-object");
+      button.title = object.name + (object.occupiable ? " · peut être occupé" : " · obstacle");
+    }
+    if (roomStamps.has(index)) button.append(make("span", "room-stamp", roomStamps.get(index)));
+    const note = make("span", "note", "×");
+    const token = make("span", "token");
+    note.setAttribute("aria-hidden", "true");
+    token.setAttribute("aria-hidden", "true");
+    button.append(note, token);
+    button.addEventListener("click", () => useCell(index));
+    fragment.append(button);
+    return { button, token };
+  });
+  board.replaceChildren(fragment);
+}
+
+function buildRoster() {
+  const fragment = document.createDocumentFragment();
+  portraits = currentCase.people.map((p, i) => {
+    const victim = p.id === currentCase.victim;
+    const button = make("button", "person" + (victim ? " victim" : ""));
+    button.type = "button";
+    button.style.setProperty("--person", personColors[i]);
+    button.append(make("span", "portrait", victim ? "V" : initials(p.name)), make("span", "person-name", p.name));
+    button.addEventListener("click", () => {
+      selected = p.id;
+      noteMode = false;
       render();
-    })();
-  </script>
+    });
+    fragment.append(button);
+    return button;
+  });
+  roster.replaceChildren(fragment);
+}
+
+function render() {
+  const active = person(selected);
+  const isPlaced = placements[selected] !== undefined;
+  for (const [index, { button, token }] of cells.entries()) {
+    const owner = ownerAt(index);
+    const occupant = owner && person(owner);
+    const object = objectAt(index);
+    const blocked = !owner && blocks(index, selected);
+    const noted = !owner && notes.has(index);
+    button.classList.toggle("occupied", Boolean(owner));
+    button.classList.toggle("selected-piece", owner === selected);
+    button.classList.toggle("blocked", blocked);
+    button.classList.toggle("noted", noted);
+    button.classList.toggle("object-focus", active.items.includes(currentCase.objects[index]));
+    button.classList.toggle("right", Boolean(checked && owner && placements[owner] === currentCase.solution[owner]));
+    button.classList.toggle("wrong", Boolean(checked && owner && placements[owner] !== currentCase.solution[owner]));
+    const label = ["Rangée " + (row(index) + 1), "colonne " + (col(index) + 1), currentCase.roomNames[room(index)]];
+    if (object) label.push(object.name + (object.occupiable ? "" : " (obstacle)"));
+    if (occupant) label.push(occupant.name);
+    if (blocked) label.push("barrée");
+    if (noted) label.push("marquée");
+    button.setAttribute("aria-label", label.join(", "));
+    if (occupant) {
+      token.textContent = owner === currentCase.victim ? "V" : initials(occupant.name);
+      token.classList.toggle("victim", owner === currentCase.victim);
+      token.style.setProperty("--person", personColors[personIndex(owner)]);
+    }
+  }
+  for (const [i, p] of currentCase.people.entries()) {
+    const placed = placements[p.id] !== undefined;
+    portraits[i].classList.toggle("placed", placed);
+    portraits[i].setAttribute("aria-pressed", String(p.id === selected));
+    portraits[i].setAttribute("aria-label", p.name + (p.id === currentCase.victim ? ", victime" : "") + (placed ? ", déjà placé" : ", à placer"));
+  }
+  byId("clue-name").textContent = active.name + (selected === currentCase.victim ? " · Victime" : "");
+  byId("clue-state").textContent = isPlaced ? "· placé" : "· à placer";
+  byId("clue-glyphs").replaceChildren(...active.items.map(glyph));
+  byId("clue-text").textContent = active.clue;
+  byId("remove").disabled = !isPlaced;
+  byId("notes").setAttribute("aria-pressed", String(noteMode));
+  setStatus(solved ? "Affaire résolue · 8 / 8 placés" : "");
+}
+
+function useCell(index) {
+  const owner = ownerAt(index);
+  if (noteMode) {
+    if (owner || objectAt(index)?.occupiable === false) {
+      setStatus("Cette case est indisponible.", "bad");
+      return;
+    }
+    if (notes.has(index)) notes.delete(index); else notes.add(index);
+  } else {
+    if (owner) {
+      selected = owner;
+      render();
+      return;
+    }
+    if (objectAt(index)?.occupiable === false) {
+      setStatus(objectAt(index).name + " · case impraticable.", "bad");
+      return;
+    }
+    if (blocks(index, selected)) {
+      setStatus("Rangée ou colonne occupée.", "bad");
+      return;
+    }
+    const moving = placements[selected] !== undefined;
+    placements[selected] = index;
+    notes.delete(index);
+    checked = false;
+    solved = false;
+    if (!moving) selected = currentCase.people.find(p => placements[p.id] === undefined)?.id || selected;
+  }
+  render();
+  save();
+}
+
+function openDialog(title, content) {
+  byId("dialog-title").textContent = title;
+  dialogBody.replaceChildren(content);
+  dialog.scrollTop = 0;
+  if (!dialog.open) dialog.showModal();
+}
+
+function action(label, handler, primary) {
+  const button = make("button", "dialog-button" + (primary ? " positive" : ""), label);
+  button.type = "button";
+  button.addEventListener("click", handler);
+  return button;
+}
+
+function openLevels() {
+  const list = make("div", "level-list");
+  for (const item of cases) {
+    const button = make("button", "level");
+    button.type = "button";
+    button.setAttribute("aria-current", String(item.id === currentCase.id));
+    const info = make("span");
+    const progress = saved[item.id];
+    const count = Object.keys(progress?.placements || {}).length;
+    info.append(make("strong", "", item.title), make("small", "", item.difficulty + " · " + item.venue));
+    button.append(make("span", "level-id", item.id), info,
+      make("span", "technical", progress?.solved ? "Résolu" : count ? count + " / 8" : "8 × 8"));
+    button.addEventListener("click", () => {
+      if (currentCase.id !== item.id) loadCase(item);
+      dialog.close();
+    });
+    list.append(button);
+  }
+  openDialog("Les six dossiers", list);
+}
+
+function openLegend() {
+  const body = make("div");
+  body.append(make("h3", "", "Les pièces du plan"));
+  const rooms = make("div", "room-key");
+  rooms.append(roomKey());
+  body.append(rooms);
+  for (const [occupiable, label] of [[true, "Peut être occupé"], [false, "Obstacles"]]) {
+    body.append(make("h3", "", label));
+    const key = make("div", "object-key");
+    for (const [type, object] of Object.entries(objectTypes)) {
+      if (object.occupiable !== occupiable || !Object.values(currentCase.objects).includes(type)) continue;
+      const item = make("span");
+      item.append(glyph(type), document.createTextNode(object.name));
+      key.append(item);
+    }
+    if (key.children.length) body.append(key);
+  }
+  body.append(make("p", "", "« À côté » veut dire que les deux cases partagent un bord dans la même pièce."));
+  openDialog("Objets et pièces", body);
+}
+
+function resetCurrent() {
+  placements = {};
+  notes.clear();
+  selected = currentCase.people[0].id;
+  noteMode = false;
+  checked = false;
+  solved = false;
+  hintIndex = 0;
+  render();
+  save();
+  dialog.close();
+}
+
+function openRules() {
+  const body = make("div");
+  body.append(make("p", "", currentCase.intro));
+  const rules = make("ol");
+  for (const text of [
+    "Place les huit personnages, victime comprise. Chaque rangée et chaque colonne accueille une seule personne.",
+    "Deux cases sont « à côté » si elles partagent un bord et appartiennent à la même pièce. Les cloisons et les diagonales coupent le voisinage.",
+    "On peut occuper un fauteuil, une banquette ou un tapis. Les autres objets bloquent leur case.",
+    "Choisis un personnage pour afficher son indice. Même barré, il reste sélectionnable pour être déplacé ou retiré.",
+    "La victime et le coupable étaient seuls dans la même pièce. Quand le plan est juste, tu peux porter une accusation."
+  ]) rules.append(make("li", "", text));
+  body.append(rules);
+  const controls = make("div", "dialog-actions");
+  controls.append(action("Effacer les notes", () => {
+    notes.clear();
+    render();
+    save();
+    dialog.close();
+  }), action("Recommencer ce dossier", () => {
+    const confirm = make("div");
+    confirm.append(make("p", "", "Les placements et les notes de ce dossier seront effacés."),
+      action("Recommencer", resetCurrent, true));
+    openDialog("Repartir de zéro", confirm);
+  }));
+  body.append(controls);
+  openDialog("Règles et dossier " + currentCase.id, body);
+}
+
+function openHint() {
+  const index = Math.min(hintIndex, currentCase.hints.length - 1);
+  const body = make("div");
+  body.append(make("p", "", currentCase.hints[index]));
+  if (index < currentCase.hints.length - 1) {
+    body.append(action("Indice suivant", () => {
+      hintIndex = index + 1;
+      save();
+      openHint();
+    }, true));
+  }
+  openDialog("Coup de pouce " + (index + 1) + " / " + currentCase.hints.length, body);
+}
+
+function openAccusation() {
+  const victimRoom = room(placements[currentCase.victim]);
+  const culprit = currentCase.people.find(p =>
+    p.id !== currentCase.victim && room(placements[p.id]) === victimRoom);
+  const body = make("div");
+  if (solved) {
+    body.append(make("p", "", culprit.name + " était la seule autre personne dans la pièce de la victime (" +
+      currentCase.roomNames[victimRoom] + ")."), action("Voir les dossiers", openLevels, true));
+    openDialog("Affaire résolue", body);
+    return;
+  }
+  body.append(make("p", "", "Les huit placements sont justes. Qui se trouvait seul avec la victime dans la même pièce ?"));
+  const options = make("div", "accusations");
+  const feedback = make("p");
+  feedback.setAttribute("role", "status");
+  for (const suspect of currentCase.people.filter(p => p.id !== currentCase.victim)) {
+    options.append(action(suspect.name, () => {
+      if (suspect.id !== culprit.id) {
+        feedback.textContent = "Reviens au plan et repère la pièce de la victime.";
+        return;
+      }
+      solved = true;
+      render();
+      save();
+      openAccusation();
+    }));
+  }
+  body.append(options, feedback);
+  openDialog("Qui est coupable ?", body);
+}
+
+function checkBoard() {
+  const remaining = currentCase.people.filter(p => placements[p.id] === undefined).length;
+  if (remaining) {
+    setStatus("Encore " + remaining + (remaining === 1 ? " personnage à placer." : " personnages à placer."), "bad");
+    return;
+  }
+  checked = true;
+  noteMode = false;
+  render();
+  const wrong = currentCase.people.filter(p => placements[p.id] !== currentCase.solution[p.id]).length;
+  if (wrong) {
+    setStatus(wrong + (wrong === 1 ? " pose à revoir." : " poses à revoir."), "bad");
+    return;
+  }
+  setStatus("Plan vérifié · 8 / 8 placés", "ok");
+  openAccusation();
+}
+
+byId("close-dialog").addEventListener("click", () => dialog.close());
+byId("levels").addEventListener("click", openLevels);
+byId("legend").addEventListener("click", openLegend);
+byId("rules").addEventListener("click", openRules);
+byId("hint").addEventListener("click", openHint);
+byId("check").addEventListener("click", checkBoard);
+byId("remove").addEventListener("click", () => {
+  delete placements[selected];
+  solved = false;
+  checked = false;
+  noteMode = false;
+  render();
+  save();
+});
+byId("notes").addEventListener("click", () => {
+  noteMode = !noteMode;
+  render();
+});
+
+loadCase(cases.find(item => item.id === saved.active) || cases[0]);
+</script>
 </body>
 </html>
