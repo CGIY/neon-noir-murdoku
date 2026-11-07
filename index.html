@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101624">
-<meta name="description" content="Néon Noir, 25 enquêtes de déduction pour la saison Cyberpunk.">
+<meta name="description" content="Néon Noir, 25 enquêtes Cyberpunk et un dossier Expert en 12 × 12.">
 <title>Néon Noir · Enquêtes cyberpunk</title>
 <style>
   :root {
@@ -116,7 +116,9 @@
   }
   .status[data-kind="bad"] { color: #ffb7b2; }
   .status[data-kind="ok"] { color: var(--acid); }
+  .meta-actions { display: flex; align-items: center; flex: 0 0 auto; gap: 5px; }
   .legend-button { min-height: 32px; }
+  .camera-toggle[aria-pressed="true"] { color: #102636; background: var(--cyan); border-color: var(--cyan); }
   .stage {
     grid-area: stage;
     min-height: 0;
@@ -129,7 +131,7 @@
     position: relative;
     display: grid;
     container-type: inline-size;
-    grid-template: repeat(8, minmax(0, 1fr)) / repeat(8, minmax(0, 1fr));
+    grid-template: repeat(var(--grid-size, 8), minmax(0, 1fr)) / repeat(var(--grid-size, 8), minmax(0, 1fr));
     isolation: isolate;
     width: min(100%, calc(100vh - 276px), 560px);
     width: min(100%, calc(100dvh - 276px), 560px);
@@ -231,6 +233,24 @@
     inset: 0;
     border-right: var(--wall-right, 0px) solid var(--ink);
     border-bottom: var(--wall-bottom, 0px) solid var(--ink);
+  }
+  .camera-field {
+    position: absolute;
+    display: none;
+    pointer-events: none;
+    inset: 1px;
+    border: 1px solid #17657580;
+    background: repeating-linear-gradient(-45deg, #086f8d42 0 2px, #a0fff155 2px 5px);
+  }
+  .board.show-cameras .camera-field { display: block; }
+  .camera-key {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border: 1px solid #176575;
+    background: repeating-linear-gradient(-45deg, #8db8c3 0 2px, #d1f5ec 2px 5px);
+    vertical-align: -.1em;
+    margin-right: 4px;
   }
   .room-plaque {
     position: absolute;
@@ -351,6 +371,8 @@
     grid-template-columns: repeat(8, minmax(0, 1fr));
     gap: 3px;
   }
+  .expert .roster { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .expert .token { font-size: clamp(.55rem, 2.65vw, .92rem); }
   .person {
     position: relative;
     min-width: 0;
@@ -607,6 +629,8 @@
   .level .level-id { font: 950 .9rem/1 ui-monospace, monospace; }
   .level strong { display: block; font-size: .86rem; }
   .level small { display: block; color: #41485a; font-size: .71rem; }
+  .expert-level { margin-bottom: 9px; border-color: #316767; background: #d9efe7; }
+  .expert-level .level-id { color: #195258; }
   @media (min-width: 750px) {
     .game {
       padding: 20px;
@@ -644,6 +668,18 @@
       grid-template-rows: auto auto minmax(185px, 1fr) auto auto auto;
     }
     .board { min-width: min(100%, 185px); }
+    .game.expert {
+      --game-height: min(100dvh, calc(100vw + 354px + env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+      gap: 5px;
+    }
+    .expert .meta-actions { gap: 3px; }
+    .expert .meta-actions .pill { padding-inline: 6px; }
+    .expert .person { min-height: 44px; gap: 2px; padding-block: 2px; }
+    .expert .portrait { width: 23px; height: 23px; }
+    .expert .clue { min-height: 76px; padding-block: 4px; }
+    .expert .clue-header { min-height: 30px; }
+    .expert .remove { min-height: 30px; }
+    .expert .tool { min-height: 44px; }
   }
   @media (min-width: 400px) and (max-width: 749px) and (orientation: portrait) {
     .game {
@@ -662,6 +698,15 @@
     .clue-text { font-size: .94rem; }
     .clue-glyphs svg { width: 23px; height: 23px; }
     .tool { min-height: 49px; font-size: .87rem; }
+    .expert .meta-actions .pill { min-height: 40px; }
+    .expert .person-name { font-size: .73rem; }
+    .expert .clue-text { font-size: .86rem; }
+    .expert .clue-glyphs svg { width: 20px; height: 20px; }
+  }
+  @media (min-width: 400px) and (max-width: 749px) and (min-height: 850px) and (orientation: portrait) {
+    .expert .person { min-height: 50px; }
+    .expert .portrait { width: 27px; height: 27px; }
+    .expert .clue { min-height: 92px; }
   }
   @media (max-width: 355px), (max-height: 580px) {
     .game { gap: 4px; }
@@ -730,10 +775,13 @@
       <div class="technical" id="plan-title"></div>
       <p id="status" class="status" role="status"></p>
     </div>
-    <button class="pill legend-button" id="legend" type="button">Objets et pièces</button>
+    <div class="meta-actions">
+      <button class="pill camera-toggle" id="camera-view" type="button" aria-pressed="false" aria-controls="board" hidden>Caméras</button>
+      <button class="pill legend-button" id="legend" type="button">Objets et pièces</button>
+    </div>
   </div>
   <section class="stage" aria-label="Plan de la scène">
-    <div id="board" class="board" role="group" aria-label="Grille de 8 rangées et 8 colonnes"></div>
+    <div id="board" class="board" role="group" aria-label="Grille de jeu"></div>
   </section>
   <aside class="brief" aria-label="Résumé du dossier">
     <span class="technical" id="brief-difficulty"></span>
@@ -795,7 +843,8 @@ const cases = [
   {"id":"22","title":"Pollen clandestin","venue":"Serre Mnémosyne","difficulty":"Difficile","intro":"Une variété interdite fleurit pendant la fermeture du marché. Suze, qui l’avait brevetée sous un faux nom, est retrouvée morte dans la serre.","rooms":["AAAABBCC","AAABBBCC","DAABBCCC","DDABCCCC","DDDBBECC","DDDEEECC","DDDEEEFF","EEEEFFFF"],"roomNames":{"A":"Sas","B":"Culture","C":"Marché","D":"Stock","E":"Greffes","F":"Séchoir"},"objects":{"4":"bench","6":"crate","8":"scanner","11":"bench","17":"scanner","18":"scanner","19":"pallet","23":"counter","24":"scanner","26":"scanner","28":"rug","38":"pallet","39":"bench","40":"counter","41":"scanner","45":"rug","47":"counter","48":"scanner","50":"bench","58":"scanner","59":"bench","62":"rug"},"people":[{"id":"silo","name":"Silo","clue":"À côté d’une banquette, dans une pièce sans caisse.","items":["bench","crate"]},{"id":"iris","name":"Iris","clue":"Sur un tapis.","items":["rug"]},{"id":"nox","name":"Nox","clue":"Sur une banquette, dans une pièce avec un tapis.","items":["bench","rug"]},{"id":"esme","name":"Esme","clue":"Sur une banquette.","items":["bench"]},{"id":"rin","name":"Rin","clue":"À côté d’un scanner.","items":["scanner"]},{"id":"miel","name":"Miel","clue":"Sur un tapis, dans une pièce sans comptoir.","items":["rug","counter"]},{"id":"koa","name":"Koa","clue":"À côté d’exactement deux scanners.","items":["scanner"]},{"id":"suze","name":"Suze","clue":"À côté d’une banquette.","items":["bench"]}],"victim":"suze","solution":{"silo":42,"iris":28,"nox":39,"esme":11,"rin":16,"miel":62,"koa":49,"suze":5},"hints":["Regarde la rangée des deux scanners contigus du Sas. Seul Rin peut occuper cette rangée.","Si Suze est près de la banquette du Marché, quels choix perdent Iris et Nox ? Il doit rester une autre personne dans la pièce.","Une fois Rin et Koa au Stock, Suze ne peut plus s’y ajouter. Regarde les banquettes restantes dans la Culture."]},
   {"id":"23","title":"Décollage à vide","venue":"Hangar Aéro 6","difficulty":"Difficile","intro":"Le taxi de Tavi décolle à vide après le couvre-feu. Son pilote est retrouvé mort avant la réouverture du hangar. Les relevés au sol sont encore lisibles.","rooms":["AAAAABBB","AAABBBBB","CAAABBBB","CCADDBBB","CCCDDBBB","CCCCDDDE","FFCDDEEE","FFFDDEEE"],"roomNames":{"A":"Douane","B":"Piste","C":"Atelier","D":"Fret","E":"Quais","F":"Repos"},"objects":{"1":"seat","2":"bench","6":"locker","8":"locker","10":"robot","11":"locker","13":"scanner","14":"seat","18":"bench","19":"bench","21":"bench","22":"locker","23":"pallet","25":"pallet","30":"robot","33":"bench","36":"pallet","38":"seat","46":"bench","51":"scanner","58":"seat","62":"pallet","63":"bench"},"people":[{"id":"luz","name":"Luz","clue":"À côté d’une banquette.","items":["bench"]},{"id":"nilo","name":"Nilo","clue":"À côté d’une palette.","items":["pallet"]},{"id":"vika","name":"Vika","clue":"À côté d’un scanner.","items":["scanner"]},{"id":"tao","name":"Tao","clue":"À côté d’une palette, dans une pièce avec un scanner.","items":["pallet","scanner"]},{"id":"mars","name":"Mars","clue":"Sur un fauteuil, dans une pièce avec un scanner.","items":["seat","scanner"]},{"id":"rom","name":"Rom","clue":"Sur un fauteuil.","items":["seat"]},{"id":"eda","name":"Eda","clue":"Sur un fauteuil, dans une pièce sans casier.","items":["seat","locker"]},{"id":"tavi","name":"Tavi","clue":"Sur une banquette.","items":["bench"]}],"victim":"tavi","solution":{"luz":45,"nilo":24,"vika":52,"tao":15,"mars":38,"rom":1,"eda":58,"tavi":19},"hints":["Pour Eda, élimine les fauteuils des pièces équipées d’un casier. Il reste une seule possibilité.","Après Eda, Mars et Rom se partagent deux colonnes. Réserve ces colonnes avant de relire les autres relevés.","Si Tavi est sur une banquette de la Piste, Mars est forcément avec lui. Vika ne peut alors pas se trouver près d’un scanner dans cette pièce."],"spans":[{"type":"bench","cells":[18,19]}]},
   {"id":"24","title":"La Chute verticale","venue":"Tour Méridienne","difficulty":"Difficile","intro":"La Tour Méridienne perd son réseau pendant onze secondes. À la reprise, la dernière communication d’Orso tourne en boucle. Orso est retrouvé mort dans la tour.","rooms":["AAAABBCC","AAAABCCC","DAAABBCC","DDAEBBCC","DDEEEBFF","DEEEEEFF","DDDEEEFF","DDDDEFFF"],"roomNames":{"A":"Hall","B":"Paliers","C":"Vigie","D":"Suites","E":"Relais","F":"Sommet"},"objects":{"1":"antenna","2":"antenna","3":"screen","5":"bed","9":"bed","12":"table","14":"bed","21":"screen","25":"rug","26":"table","28":"bed","32":"rug","35":"bed","37":"antenna","45":"bed","46":"rug","54":"bed","55":"screen","58":"pod","59":"rug","61":"screen","62":"bed"},"people":[{"id":"maya","name":"Maya","clue":"À côté d’un lit, dans une pièce avec un écran.","items":["bed","screen"]},{"id":"sol","name":"Sol","clue":"Sur un lit, dans une pièce avec exactement deux lits.","items":["bed"]},{"id":"ezra","name":"Ezra","clue":"À côté d’un lit, dans une pièce avec exactement deux lits.","items":["bed"]},{"id":"fia","name":"Fia","clue":"À côté d’un caisson.","items":["pod"]},{"id":"kade","name":"Kade","clue":"Sur un tapis, dans une pièce sans caisson.","items":["rug","pod"]},{"id":"ione","name":"Ione","clue":"Sur un tapis.","items":["rug"]},{"id":"jun","name":"Jun","clue":"À côté d’un lit, dans une pièce sans antenne.","items":["bed","antenna"]},{"id":"orso","name":"Orso","clue":"Sur un lit.","items":["bed"]}],"victim":"orso","solution":{"maya":8,"sol":35,"ezra":20,"fia":50,"kade":46,"ione":25,"jun":63,"orso":5},"hints":["Les tapis des Suites sont dans la même pièce qu’un caisson. Écarte-les pour Kade.","Parmi les lits d’Orso, écarte ceux où personne ne pourrait le rejoindre sans conflit de rangée ou de colonne.","Si Sol prend le lit des Paliers sur la rangée du haut, Orso doit finir sur un lit du Relais. Vérifie alors si quelqu’un peut encore être avec lui."]},
-  {"id":"25","title":"Le Pacte Axiome","venue":"Siège Axiome","difficulty":"Difficile","intro":"Au siège d’Axiome, un accord de surveillance devait être signé. Quand l’antenne s’est rallumée, l’auditrice Oriel était morte. Les capteurs du mobilier ont conservé les derniers mouvements.","rooms":["AAABBBBB","AAAABBBB","CAAAABDD","CCCAABDD","CCCEEEDD","CCEEEEDD","FFEEEDDD","FFEEEEDD"],"roomNames":{"A":"Atrium","B":"Toit","C":"Archives","D":"Pilotage","E":"Cœur","F":"Sas"},"objects":{"10":"antenna","12":"antenna","14":"bench","21":"rug","22":"antenna","25":"bench","26":"rug","28":"rug","32":"bench","35":"counter","36":"counter","38":"rug","39":"bench","41":"antenna","44":"seat","45":"bench","46":"seat","49":"bench","53":"antenna","59":"rug","61":"rug"},"spans":[{"type":"counter","cells":[35,36]}],"people":[{"id":"aube","name":"Aube","clue":"Sur un tapis.","items":["rug"]},{"id":"sven","name":"Sven","clue":"À côté d’un tapis, dans la même pièce que Nym.","items":["rug"]},{"id":"lux","name":"Lux","clue":"À côté d’une banquette, dans une pièce avec un tapis.","items":["bench","rug"]},{"id":"nym","name":"Nym","clue":"À côté du comptoir, dans une pièce avec un fauteuil.","items":["counter","seat"]},{"id":"cleo","name":"Cléo","clue":"À côté d’une antenne, sans comptoir à côté.","items":["antenna","counter"]},{"id":"merle","name":"Merle","clue":"À côté d’un fauteuil, dans une pièce sans comptoir.","items":["seat","counter"]},{"id":"zed","name":"Zed","clue":"Sur une banquette.","items":["bench"]},{"id":"oriel","name":"Oriel","clue":"À côté d’une banquette, dans une pièce sans comptoir.","items":["bench","counter"]}],"victim":"oriel","solution":{"aube":21,"sven":60,"lux":24,"nym":43,"cleo":2,"merle":38,"zed":49,"oriel":15},"hints":["Le comptoir fixe la pièce de Nym. Cherche les tapis que Sven peut longer dans cette même pièce.","Dans les configurations qui respectent les indices de mobilier, Oriel se retrouve seule si elle est aux Archives ou au Sas. Il reste le toit.","Sur le toit, Oriel ne peut avoir qu’une seule personne avec elle. Cherche une antenne dans l’Atrium pour que Cléo n’occupe pas le toit."]}
+  {"id":"25","title":"Le Pacte Axiome","venue":"Siège Axiome","difficulty":"Difficile","intro":"Au siège d’Axiome, un accord de surveillance devait être signé. Quand l’antenne s’est rallumée, l’auditrice Oriel était morte. Les capteurs du mobilier ont conservé les derniers mouvements.","rooms":["AAABBBBB","AAAABBBB","CAAAABDD","CCCAABDD","CCCEEEDD","CCEEEEDD","FFEEEDDD","FFEEEEDD"],"roomNames":{"A":"Atrium","B":"Toit","C":"Archives","D":"Pilotage","E":"Cœur","F":"Sas"},"objects":{"10":"antenna","12":"antenna","14":"bench","21":"rug","22":"antenna","25":"bench","26":"rug","28":"rug","32":"bench","35":"counter","36":"counter","38":"rug","39":"bench","41":"antenna","44":"seat","45":"bench","46":"seat","49":"bench","53":"antenna","59":"rug","61":"rug"},"spans":[{"type":"counter","cells":[35,36]}],"people":[{"id":"aube","name":"Aube","clue":"Sur un tapis.","items":["rug"]},{"id":"sven","name":"Sven","clue":"À côté d’un tapis, dans la même pièce que Nym.","items":["rug"]},{"id":"lux","name":"Lux","clue":"À côté d’une banquette, dans une pièce avec un tapis.","items":["bench","rug"]},{"id":"nym","name":"Nym","clue":"À côté du comptoir, dans une pièce avec un fauteuil.","items":["counter","seat"]},{"id":"cleo","name":"Cléo","clue":"À côté d’une antenne, sans comptoir à côté.","items":["antenna","counter"]},{"id":"merle","name":"Merle","clue":"À côté d’un fauteuil, dans une pièce sans comptoir.","items":["seat","counter"]},{"id":"zed","name":"Zed","clue":"Sur une banquette.","items":["bench"]},{"id":"oriel","name":"Oriel","clue":"À côté d’une banquette, dans une pièce sans comptoir.","items":["bench","counter"]}],"victim":"oriel","solution":{"aube":21,"sven":60,"lux":24,"nym":43,"cleo":2,"merle":38,"zed":49,"oriel":15},"hints":["Le comptoir fixe la pièce de Nym. Cherche les tapis que Sven peut longer dans cette même pièce.","Dans les configurations qui respectent les indices de mobilier, Oriel se retrouve seule si elle est aux Archives ou au Sas. Il reste le toit.","Sur le toit, Oriel ne peut avoir qu’une seule personne avec elle. Cherche une antenne dans l’Atrium pour que Cléo n’occupe pas le toit."]},
+  {"id":"E01","title":"Angle mort","venue":"Dépôt Kestrel","difficulty":"Expert","intro":"À la fermeture du dépôt Kestrel, un drone décolle sans ordre. Quand les moteurs s’arrêtent, Mika, le chef de piste, est retrouvé mort. Les caméras ont filmé une partie des déplacements.","rooms":["AAAAABBBBBBB","AAAAAABBBBBB","AAAAAAACBBBB","DAAAAACCCBBB","DDDAACCCCCBB","DDDDCCCCCEEE","DDDDCCCCEEEE","DDDDFFCCEEEE","DDDFFFFEEEEE","DDDFFFFFEEEE","DDFFFFFFEEEE","DFFFFFFFFEEE"],"roomNames":{"A":"Accueil","B":"Régie","C":"Bancs","D":"Stock","E":"Recharge","F":"Piste"},"objects":{"2":"stool","5":"rug","12":"locker","17":"locker","20":"rug","22":"locker","23":"camera","26":"workbench","27":"stool","28":"crate","41":"workbench","42":"workbench","43":"camera","44":"charger","48":"droneRack","52":"rug","54":"rug","56":"charger","57":"workbench","59":"locker","64":"droneRack","65":"stool","69":"stool","71":"robot","72":"workbench","73":"droneRack","74":"droneRack","76":"droneRack","77":"robot","81":"charger","82":"camera","86":"crate","89":"camera","90":"crate","102":"crate","106":"charger","107":"stool","108":"camera","119":"charger","127":"robot","135":"robot","141":"stool"},"cameras":{"23":"W","43":"S","82":"S","89":"S","108":"N"},"people":[{"id":"ari","name":"Ari","clue":"À côté d’un rack de drones, sans être à côté d’une caisse.","items":["droneRack","crate"]},{"id":"bast","name":"Bast","clue":"À côté d’un drone.","items":["robot"]},{"id":"cendre","name":"Cendre","clue":"À côté d’un rack de drones, dans le champ d’une caméra.","items":["droneRack","camera"]},{"id":"dita","name":"Dita","clue":"À côté d’exactement deux bornes de recharge, avec Eon dans la même pièce.","items":["charger"]},{"id":"eon","name":"Eon","clue":"À côté d’un drone, dans une pièce sans établi.","items":["robot","workbench"]},{"id":"faye","name":"Faye","clue":"À côté d’un rack de drones, sans être à côté d’un établi, avec Gus dans la même pièce.","items":["droneRack","workbench"]},{"id":"gus","name":"Gus","clue":"À côté d’une caisse, dans une pièce sans borne de recharge.","items":["crate","charger"]},{"id":"hale","name":"Hale","clue":"Sur un tapis, hors champ de toutes les caméras.","items":["rug","camera"]},{"id":"iska","name":"Iska","clue":"Sur un tapis.","items":["rug"]},{"id":"jax","name":"Jax","clue":"À côté d’un établi.","items":["workbench"]},{"id":"kira","name":"Kira","clue":"À côté d’un tabouret, dans une pièce sans casier.","items":["stool","locker"]},{"id":"mika","name":"Mika","clue":"À côté d’un tapis, sans être à côté d’une borne de recharge.","items":["rug","charger"]}],"victim":"mika","solution":{"ari":65,"bast":139,"cendre":36,"dita":118,"eon":83,"faye":85,"gus":98,"hale":52,"iska":20,"jax":27,"kira":129,"mika":6},"hints":["Repère les deux cases qui touchent chacune deux bornes de recharge. Dita se trouvait sur l’une d’elles. Dans cette pièce, quelles cases restent à côté d’un drone pour Eon ?","Dita et Eon se partagent les deux colonnes de droite. Réserve-les à leur duo. Cherche aussi la seule pièce qui permet à Faye et Gus de respecter leurs deux indices.","Après avoir placé Gus et Kira, compare les positions restantes de Cendre et Faye. Leurs cases possibles se limitent aux deux colonnes de gauche. Quels autres indices peux-tu y barrer ?","La caméra de la Régie filme un tapis. Une fois la rangée de cette caméra réservée à Iska, compare les tapis hors champ et les cases près d’un tapis pour Hale et Mika."]}
 ];
 const objectTypes = {
   seat: {
@@ -879,8 +928,35 @@ const objectTypes = {
   table: {
     name: "Table", occupiable: false,
     art: '<circle cx="20" cy="21" r="15" fill="#936969"/><circle cx="20" cy="19" r="14" fill="#f2ca94"/><path d="m13 15 4 4-4 4-4-4z" fill="#e591a6"/><circle cx="25" cy="19" r="3" fill="#addfed"/>'
+  },
+  camera: {
+    name: "Caméra",
+    occupiable: false,
+    art: '<path d="M5 19h7v6H5zm0-4v14" fill="#7587a3"/><path d="M24 16l11-4v16l-11-4z" fill="#42566e"/><rect x="8" y="11" width="20" height="18" rx="4" fill="#e5e7f6"/><path d="M12 15h10m-10 4h6" fill="none" stroke="#899db8" stroke-width="1.5"/><rect x="33" y="12" width="4" height="16" rx="1.5" fill="#7aeee4"/>'
+  },
+  charger: {
+    name: "Borne de recharge",
+    occupiable: false,
+    art: '<path d="M23 23h3c4 0 4 8 8 8 2 0 3-2 3-5v-9" fill="none" stroke="#8adfd0" stroke-width="3"/><path d="M34 11h5v7h-5zm1-3v3m3-3v3" fill="#c3efda"/><rect x="5" y="5" width="21" height="29" rx="4" fill="#267871"/><rect x="8" y="8" width="15" height="17" rx="2" fill="#a8f4c6"/><path d="m17 10-6 8h4l-1 5 6-8h-4z" fill="#eeff85" stroke-width="1.2"/><path d="M8 30h15M4 35h24" stroke="#a8f4c6" stroke-width="1.6"/>'
+  },
+  workbench: {
+    name: "Établi",
+    occupiable: false,
+    art: '<path d="M5 29h5v6H5zm25 0h5v6h-5z" fill="#765246"/><rect x="3" y="8" width="34" height="24" rx="3" fill="#d49a63"/><path d="M4 25h32v6H4z" fill="#79594e"/><path d="M15 28h10" stroke="#f5c495" stroke-width="1.6"/><path d="M27 12a6 6 0 0 0-7 7l-7 5-3-3 7-6a6 6 0 0 1 7-5l-3 3 2 2z" fill="#dbe6e8"/><rect x="28" y="18" width="5" height="4" rx="1" fill="#ffdf97"/>'
+  },
+  droneRack: {
+    name: "Rack de drones",
+    occupiable: false,
+    art: '<rect x="4" y="5" width="32" height="30" rx="4" fill="#53617f"/><path d="M8 9h24v22H8z" fill="#282c46"/><path d="M9 20h22" stroke="#a7a9d7" stroke-width="2"/><path d="m14 11 12 6m0-6-12 6m0 6 12 6m0-6-12 6" fill="none" stroke="#91e4e1" stroke-width="2.6"/><path d="m20 10 4 4-4 4-4-4zm0 12 4 4-4 4-4-4z" fill="#f7b0d0" stroke-width="1.2"/>'
+  },
+  stool: {
+    name: "Tabouret",
+    occupiable: true,
+    art: '<path d="M13 20 8 34m12-13v15m7-16 5 14M10 30h20" fill="none" stroke="#b9c0d7" stroke-width="2.8"/><ellipse cx="20" cy="18" rx="13" ry="9" fill="#85477b"/><ellipse cx="20" cy="15" rx="13" ry="8" fill="#ed98c0"/><path d="M12 14c3-3 10-4 15-1" fill="none" stroke="#ffe1f1" stroke-width="1.4"/>'
   }
 };
+const regularCases = cases.filter(item => item.rooms.length === 8);
+const expertCases = cases.filter(item => item.rooms.length === 12);
 const caseMaterials = {
   "01": { A: "circuit", B: "acoustic", C: "tile", D: "plank", E: "velvet" },
   "02": { A: "circuit", B: "rails", C: "terrazzo", D: "steel", E: "hazard" },
@@ -906,9 +982,19 @@ const caseMaterials = {
   "22": { A: "hazard", B: "canopy", C: "terrazzo", D: "steel", E: "tile", F: "acoustic" },
   "23": { A: "tile", B: "asphalt", C: "steel", D: "hazard", E: "rails", F: "plank" },
   "24": { A: "terrazzo", B: "tile", C: "circuit", D: "velvet", E: "hex", F: "asphalt" },
-  "25": { A: "terrazzo", B: "asphalt", C: "plank", D: "circuit", E: "hex", F: "hazard" }
+  "25": { A: "terrazzo", B: "asphalt", C: "plank", D: "circuit", E: "hex", F: "hazard" },
+  "E01": { A: "steel", B: "hazard", C: "rails", D: "circuit", E: "hex", F: "asphalt" }
 };
-const personColors = ["#9cf6e4", "#ffcb84", "#ffb2d9", "#beb7ff", "#f4ea83", "#b8ec94", "#a9d4ff", "#ff9c9b"];
+const personColors = [
+  "#9cf6e4", "#ffcb84", "#ffb2d9", "#beb7ff", "#f4ea83", "#b8ec94",
+  "#a9d4ff", "#ff9c9b", "#ffc3a5", "#cde0b1", "#8fdaf0", "#e6b1f0"
+];
+const cameraDirections = {
+  N: { dr: -1, dc: 0, angle: -90, label: "le nord" },
+  E: { dr: 0, dc: 1, angle: 0, label: "l’est" },
+  S: { dr: 1, dc: 0, angle: 90, label: "le sud" },
+  W: { dr: 0, dc: -1, angle: 180, label: "l’ouest" }
+};
 const portraitMark = (() => {
   const outline = "#181728";
   const complexions = [
@@ -1056,7 +1142,7 @@ const portraitMark = (() => {
     const [jacket, trim] = wardrobes[outfit];
     const cut = haircuts[hair];
     const border = inked(1.35);
-    const accent = personColors[index];
+    const accent = personColor(index);
     const mark = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     mark.setAttribute("viewBox", "0 0 36 36");
     mark.setAttribute("aria-hidden", "true");
@@ -1108,8 +1194,13 @@ const roster = byId("roster");
 const dialog = byId("dialog");
 const dialogBody = byId("dialog-body");
 const status = byId("status");
+const game = document.querySelector(".game");
+const cameraView = byId("camera-view");
 let saved = readSaved();
 let currentCase;
+let gridSize;
+let coveredCells;
+let cameraOverride;
 let placements;
 let notes;
 let selected;
@@ -1152,8 +1243,8 @@ function pulseLines(index) {
   const c = col(index) + 1;
   const horizontal = make("span", "line-beam");
   const vertical = make("span", "line-beam column");
-  horizontal.style.gridArea = r + " / 1 / " + (r + 1) + " / 9";
-  vertical.style.gridArea = "1 / " + c + " / 9 / " + (c + 1);
+  horizontal.style.gridArea = r + " / 1 / " + (r + 1) + " / " + (gridSize + 1);
+  vertical.style.gridArea = "1 / " + c + " / " + (gridSize + 1) + " / " + (c + 1);
   beam(horizontal, board);
   beam(vertical, board);
 }
@@ -1196,15 +1287,39 @@ function glyph(type, wide = false) {
   return svg;
 }
 
-function row(cell) { return Math.floor(cell / 8); }
-function col(cell) { return cell % 8; }
+function row(cell) { return Math.floor(cell / gridSize); }
+function col(cell) { return cell % gridSize; }
 function room(cell) { return currentCase.rooms[row(cell)][col(cell)]; }
-function floorIndex(id) { return (roomIds.indexOf(id) + Number(currentCase.id) - 1) % 6; }
+function floorIndex(id) { return (roomIds.indexOf(id) + Number(currentCase.id.slice(-2)) - 1) % 6; }
+function gridLabel(item) { return item.rooms.length + " × " + item.rooms.length; }
 function objectAt(cell) { return objectTypes[currentCase.objects[cell]]; }
 function person(id) { return currentCase.people.find(item => item.id === id); }
 function personIndex(id) { return currentCase.people.findIndex(item => item.id === id); }
 function initials(name) { return [...name].slice(0, 2).join("").toUpperCase(); }
 function ownerAt(cell) { return Object.keys(placements).find(id => placements[id] === cell); }
+
+function personColor(index) {
+  if (gridSize === 8) return personColors[index];
+  const victimIndex = personIndex(currentCase.victim);
+  if (index === victimIndex) return personColors[7];
+  const suspectIndex = index < victimIndex ? index : index - 1;
+  return personColors[suspectIndex < 7 ? suspectIndex : suspectIndex + 1];
+}
+
+function cameraCoverage() {
+  const covered = new Set();
+  for (const [key, direction] of Object.entries(currentCase.cameras || {})) {
+    const origin = Number(key);
+    const area = room(origin);
+    const { dr, dc } = cameraDirections[direction];
+    for (let r = row(origin) + dr, c = col(origin) + dc;
+      r >= 0 && r < gridSize && c >= 0 && c < gridSize && currentCase.rooms[r][c] === area;
+      r += dr, c += dc) {
+      covered.add(r * gridSize + c);
+    }
+  }
+  return covered;
+}
 
 function blocks(cell, except) {
   return Object.entries(placements).some(([id, at]) =>
@@ -1213,7 +1328,7 @@ function blocks(cell, except) {
 
 function setStatus(text, kind) {
   const count = Object.keys(placements).length;
-  status.textContent = text || (count + " / 8 placés" + (noteMode ? " · Mode notes" : ""));
+  status.textContent = text || (count + " / " + gridSize + " placés" + (noteMode ? " · Mode notes" : ""));
   status.dataset.kind = kind || "";
 }
 
@@ -1229,6 +1344,13 @@ function roomKey() {
 
 function loadCase(item) {
   currentCase = item;
+  gridSize = item.rooms.length;
+  game.classList.toggle("expert", gridSize === 12);
+  board.style.setProperty("--grid-size", gridSize);
+  board.setAttribute("aria-label", "Grille de " + gridSize + " rangées et " + gridSize + " colonnes");
+  cameraView.hidden = !item.cameras;
+  cameraOverride = null;
+  coveredCells = cameraCoverage();
   const progress = saved[item.id] || {};
   placements = { ...progress.placements };
   notes = new Set(progress.notes || []);
@@ -1238,9 +1360,9 @@ function loadCase(item) {
   noteMode = false;
   checked = false;
   roomIds = Object.keys(item.roomNames);
-  byId("case-number").textContent = " " + item.id + "/25";
+  byId("case-number").textContent = " " + item.id + (gridSize === 12 ? " · EXPERT" : "/" + regularCases.length);
   byId("case-title").textContent = item.title;
-  byId("plan-title").textContent = item.venue + " · 8 × 8";
+  byId("plan-title").textContent = item.venue + " · " + gridLabel(item);
   byId("brief-difficulty").textContent = "Dossier " + item.id + " · " + item.difficulty;
   byId("brief-story").textContent = item.intro;
   byId("brief-rooms").replaceChildren(roomKey());
@@ -1261,22 +1383,22 @@ function placeOverlay(overlay, start, width) {
 
 function buildRoomPlaque(id) {
   const name = currentCase.roomNames[id];
-  const desired = name.length > 3 ? 2 : 1;
+  const desired = gridSize === 12 && name.length > 8 ? 3 : name.length > 3 ? 2 : 1;
   let best = { index: currentCase.rooms.join("").indexOf(id), span: 1, score: -1 };
-  for (let index = 0; index < 64; index++) {
+  for (let index = 0; index < gridSize ** 2; index++) {
     if (room(index) !== id) continue;
     let span = 1;
-    while (span < desired && col(index) + span < 8 && room(index + span) === id) span++;
+    while (span < desired && col(index) + span < gridSize && room(index + span) === id) span++;
     let objectsInRun = 0;
     for (let i = 0; i < span; i++) objectsInRun += Number(Boolean(objectAt(index + i)));
-    const topWall = row(index) === 0 || room(index - 8) !== id;
+    const topWall = row(index) === 0 || room(index - gridSize) !== id;
     const leftWall = col(index) === 0 || room(index - 1) !== id;
     const score = span * 100 - objectsInRun * 20 + Number(topWall) * 10 + Number(leftWall);
     if (score > best.score) best = { index, span, score };
   }
   const plaque = make("span", "room-plaque floor-" + floorIndex(id), name);
   placeOverlay(plaque, best.index, best.span);
-  plaque.style.setProperty("--plaque-size", Math.min(2.45, (12.5 * best.span - 3) / (.78 * name.length)) + "cqw");
+  plaque.style.setProperty("--plaque-size", Math.min(2.45, (100 * best.span / gridSize - 3) / (.78 * name.length)) + "cqw");
   for (let i = 0; i < best.span; i++) cells[best.index + i].button.classList.add("plaque-tile");
   return plaque;
 }
@@ -1285,21 +1407,29 @@ function buildBoard() {
   const fragment = document.createDocumentFragment();
   const spans = currentCase.spans || [];
   const spannedCells = new Set(spans.flatMap(span => span.cells));
-  cells = Array.from({ length: 64 }, (_, index) => {
+  cells = Array.from({ length: gridSize ** 2 }, (_, index) => {
     const id = room(index);
     const material = caseMaterials[currentCase.id][id];
     const button = make("button", "cell floor-" + floorIndex(id) + " material-" + material);
     button.type = "button";
-    button.style.setProperty("--floor-x", (-12.5 * col(index)) + "cqw");
-    button.style.setProperty("--floor-y", (-12.5 * row(index)) + "cqw");
-    if (col(index) < 7 && room(index + 1) !== room(index)) button.style.setProperty("--wall-right", "3px");
-    if (row(index) < 7 && room(index + 8) !== room(index)) button.style.setProperty("--wall-bottom", "3px");
+    button.style.setProperty("--floor-x", (-100 * col(index) / gridSize) + "cqw");
+    button.style.setProperty("--floor-y", (-100 * row(index) / gridSize) + "cqw");
+    if (col(index) < gridSize - 1 && room(index + 1) !== room(index)) button.style.setProperty("--wall-right", "3px");
+    if (row(index) < gridSize - 1 && room(index + gridSize) !== room(index)) button.style.setProperty("--wall-bottom", "3px");
+    if (coveredCells.has(index)) {
+      const field = make("span", "camera-field");
+      field.setAttribute("aria-hidden", "true");
+      button.append(field);
+    }
     const type = currentCase.objects[index];
     const object = objectAt(index);
     if (object) {
       if (!spannedCells.has(index)) {
         const art = make("span", "object");
-        art.append(glyph(type));
+        const icon = glyph(type);
+        const direction = cameraDirections[currentCase.cameras?.[index]];
+        if (direction) icon.style.transform = "rotate(" + direction.angle + "deg)";
+        art.append(icon);
         button.append(art);
       }
       button.classList.add("has-object");
@@ -1331,7 +1461,7 @@ function buildRoster() {
     const victim = p.id === currentCase.victim;
     const button = make("button", "person" + (victim ? " victim" : ""));
     button.type = "button";
-    button.style.setProperty("--person", personColors[i]);
+    button.style.setProperty("--person", personColor(i));
     const portrait = make("span", "portrait");
     portrait.append(portraitMark(currentCase.id, p, i, victim));
     button.append(portrait, make("span", "person-name", p.name));
@@ -1348,6 +1478,7 @@ function signalSelection() {
 }
 
 function selectPerson(id) {
+  if (id !== selected) cameraOverride = null;
   selected = id;
   noteMode = false;
   render();
@@ -1357,6 +1488,9 @@ function selectPerson(id) {
 function render() {
   const active = person(selected);
   const isPlaced = placements[selected] !== undefined;
+  const cameraVisible = Boolean(currentCase.cameras && (cameraOverride ?? active.items.includes("camera")));
+  board.classList.toggle("show-cameras", cameraVisible);
+  cameraView.setAttribute("aria-pressed", String(cameraVisible));
   for (const { art, type } of furnitureSpans) art.classList.toggle("object-focus", active.items.includes(type));
   for (const [index, { button, token }] of cells.entries()) {
     const owner = ownerAt(index);
@@ -1373,6 +1507,9 @@ function render() {
     button.classList.toggle("wrong", Boolean(checked && owner && placements[owner] !== currentCase.solution[owner]));
     const label = ["Rangée " + (row(index) + 1), "colonne " + (col(index) + 1), currentCase.roomNames[room(index)]];
     if (object) label.push(object.name + (object.occupiable ? "" : " (obstacle)"));
+    const direction = cameraDirections[currentCase.cameras?.[index]];
+    if (direction) label.push("orientée vers " + direction.label);
+    if (cameraVisible && coveredCells.has(index)) label.push("filmée");
     if (occupant) label.push(occupant.name);
     if (blocked) label.push("barrée");
     if (noted) label.push("marquée");
@@ -1380,7 +1517,7 @@ function render() {
     if (occupant) {
       token.textContent = owner === currentCase.victim ? "V" : initials(occupant.name);
       token.classList.toggle("victim", owner === currentCase.victim);
-      token.style.setProperty("--person", personColors[personIndex(owner)]);
+      token.style.setProperty("--person", personColor(personIndex(owner)));
     }
   }
   for (const [i, p] of currentCase.people.entries()) {
@@ -1397,7 +1534,7 @@ function render() {
     const index = personIndex(selected);
     const victim = selected === currentCase.victim;
     const portrait = byId("clue-portrait");
-    portrait.style.setProperty("--person", personColors[index]);
+    portrait.style.setProperty("--person", personColor(index));
     portrait.classList.toggle("victim-portrait", victim);
     portrait.replaceChildren(portraitMark(currentCase.id, active, index, victim));
     byId("clue-glyphs").replaceChildren(...active.items.map(type => glyph(type)));
@@ -1406,7 +1543,7 @@ function render() {
   }
   byId("remove").disabled = !isPlaced;
   byId("notes").setAttribute("aria-pressed", String(noteMode));
-  setStatus(solved ? "Affaire résolue · 8 / 8 placés" : "");
+  setStatus(solved ? "Affaire résolue · " + gridSize + " / " + gridSize + " placés" : "");
 }
 
 function useCell(index) {
@@ -1440,6 +1577,7 @@ function useCell(index) {
   checked = false;
   solved = false;
   if (!moving) selected = currentCase.people.find(p => placements[p.id] === undefined)?.id || who;
+  if (selected !== who) cameraOverride = null;
   render();
   pulseLines(index);
   moveOnce(cells[index].token, "deposit", 375);
@@ -1463,44 +1601,56 @@ function action(label, handler, primary) {
   return button;
 }
 
+function chooseCase(item) {
+  if (currentCase.id !== item.id) loadCase(item);
+  if (location.protocol === "https:" || location.protocol === "http:") {
+    const url = new URL(location.href);
+    if (item.rooms.length === 12) url.searchParams.set("dossier", item.id);
+    else url.searchParams.delete("dossier");
+    if (url.href !== location.href) history.replaceState(null, "", url);
+  }
+  dialog.close();
+}
+
+function levelButton(item, featured = false) {
+  const button = make("button", featured ? "level expert-level" : "level");
+  button.type = "button";
+  button.setAttribute("aria-current", String(item.id === currentCase.id));
+  const info = make("span");
+  const progress = saved[item.id];
+  const count = Object.keys(progress?.placements || {}).length;
+  info.append(make("strong", "", item.title),
+    make("small", "", (featured ? "Expert · Pilote" : item.difficulty) + " · " + item.venue));
+  button.append(make("span", "level-id", item.id), info,
+    make("span", "technical", progress?.solved ? "Résolu" : count ? count + " / " + item.people.length : gridLabel(item)));
+  button.addEventListener("click", () => chooseCase(item));
+  return button;
+}
+
 function openLevels() {
-  showLevelPage(Math.floor(cases.indexOf(currentCase) / 5));
+  showLevelPage(Math.max(0, Math.floor(regularCases.indexOf(currentCase) / 5)));
 }
 
 function showLevelPage(page, restoreFocus = false) {
   const body = make("div");
-  const solvedCount = cases.filter(item => saved[item.id]?.solved).length;
-  body.append(make("p", "season-progress", solvedCount + " / " + cases.length + " dossiers résolus"));
+  const solvedCount = regularCases.filter(item => saved[item.id]?.solved).length;
+  body.append(make("p", "season-progress", solvedCount + " / " + regularCases.length + " dossiers résolus"));
+  for (const item of expertCases) body.append(levelButton(item, true));
   const pages = make("div", "case-pages");
   pages.setAttribute("role", "group");
   pages.setAttribute("aria-label", "Groupes de dossiers");
   let activePage;
-  for (let start = 0; start < cases.length; start += 5) {
+  for (let start = 0; start < regularCases.length; start += 5) {
     const group = start / 5;
-    const end = Math.min(start + 4, cases.length - 1);
-    const button = action(cases[start].id + "–" + cases[end].id, () => showLevelPage(group, true));
+    const end = Math.min(start + 4, regularCases.length - 1);
+    const button = action(regularCases[start].id + "–" + regularCases[end].id, () => showLevelPage(group, true));
     button.setAttribute("aria-pressed", String(group === page));
     if (group === page) activePage = button;
     pages.append(button);
   }
   body.append(pages);
   const list = make("div", "level-list");
-  for (const item of cases.slice(page * 5, page * 5 + 5)) {
-    const button = make("button", "level");
-    button.type = "button";
-    button.setAttribute("aria-current", String(item.id === currentCase.id));
-    const info = make("span");
-    const progress = saved[item.id];
-    const count = Object.keys(progress?.placements || {}).length;
-    info.append(make("strong", "", item.title), make("small", "", item.difficulty + " · " + item.venue));
-    button.append(make("span", "level-id", item.id), info,
-      make("span", "technical", progress?.solved ? "Résolu" : count ? count + " / 8" : "8 × 8"));
-    button.addEventListener("click", () => {
-      if (currentCase.id !== item.id) loadCase(item);
-      dialog.close();
-    });
-    list.append(button);
-  }
+  for (const item of regularCases.slice(page * 5, page * 5 + 5)) list.append(levelButton(item));
   body.append(list);
   openDialog("Saison Cyberpunk", body);
   if (restoreFocus) activePage.focus();
@@ -1527,6 +1677,14 @@ function openLegend() {
   if (currentCase.spans?.length) {
     body.append(make("p", "", "Un meuble qui couvre deux cases compte une seule fois. Ses deux cases peuvent servir de repère pour un indice."));
   }
+  if (currentCase.cameras) {
+    body.append(make("h3", "", "Champs des caméras"));
+    const key = make("p");
+    const swatch = make("span", "camera-key");
+    swatch.setAttribute("aria-hidden", "true");
+    key.append(swatch, document.createTextNode("Les cases hachurées sont filmées. Le champ part de l’objectif, traverse le mobilier et s’arrête à la première cloison."));
+    body.append(key);
+  }
   openDialog("Objets et pièces", body);
 }
 
@@ -1538,6 +1696,7 @@ function resetCurrent() {
   checked = false;
   solved = false;
   hintIndex = 0;
+  cameraOverride = null;
   render();
   save();
   dialog.close();
@@ -1548,12 +1707,15 @@ function openRules() {
   body.append(make("p", "", currentCase.intro));
   const rules = make("ol");
   for (const text of [
-    "Place les huit personnages, victime comprise. Chaque rangée et chaque colonne accueille une seule personne.",
+    "Place les " + gridSize + " personnages, victime comprise. Chaque rangée et chaque colonne accueille une seule personne.",
     "Deux cases sont « à côté » si elles partagent un bord et appartiennent à la même pièce. Les cloisons et les diagonales coupent le voisinage.",
     "La légende distingue les objets sur lesquels on peut se placer des obstacles qui bloquent leur case.",
     "Choisis un personnage pour afficher son indice. Même barré, il reste sélectionnable pour être déplacé ou retiré.",
     "La victime et le coupable étaient seuls dans la même pièce. Quand le plan est juste, tu peux porter une accusation."
   ]) rules.append(make("li", "", text));
+  if (currentCase.cameras) {
+    rules.append(make("li", "", "Le bouton Caméras affiche les cases filmées. Chaque caméra filme droit devant elle dans sa pièce, jusqu’à la première cloison."));
+  }
   body.append(rules);
   const controls = make("div", "dialog-actions");
   controls.append(action("Effacer les notes", () => {
@@ -1595,19 +1757,17 @@ function openAccusation() {
     body.append(make("p", "", culprit.name + " était la seule autre personne dans la pièce de la victime (" +
       currentCase.roomNames[victimRoom] + ")."));
     const controls = make("div", "dialog-actions");
-    const next = cases[cases.indexOf(currentCase) + 1];
+    const collection = gridSize === 12 ? expertCases : regularCases;
+    const next = collection[collection.indexOf(currentCase) + 1];
     if (next) {
-      controls.append(action("Dossier suivant", () => {
-        loadCase(next);
-        dialog.close();
-      }, true));
+      controls.append(action("Dossier suivant", () => chooseCase(next), true));
     }
     controls.append(action("Voir les dossiers", openLevels, !next));
     body.append(controls);
     openDialog("Affaire résolue", body);
     return;
   }
-  body.append(make("p", "", "Les huit placements sont justes. Qui se trouvait seul avec la victime dans la même pièce ?"));
+  body.append(make("p", "", "Les " + gridSize + " placements sont justes. Qui se trouvait seul avec la victime dans la même pièce ?"));
   const options = make("div", "accusations");
   const feedback = make("p");
   feedback.setAttribute("role", "status");
@@ -1643,13 +1803,17 @@ function checkBoard() {
     setStatus(wrong + (wrong === 1 ? " pose à revoir." : " poses à revoir."), "bad");
     return;
   }
-  setStatus("Plan vérifié · 8 / 8 placés", "ok");
+  setStatus("Plan vérifié · " + gridSize + " / " + gridSize + " placés", "ok");
   openAccusation();
 }
 
 byId("close-dialog").addEventListener("click", () => dialog.close());
 byId("levels").addEventListener("click", openLevels);
 byId("legend").addEventListener("click", openLegend);
+cameraView.addEventListener("click", () => {
+  cameraOverride = cameraView.getAttribute("aria-pressed") !== "true";
+  render();
+});
 byId("rules").addEventListener("click", openRules);
 byId("hint").addEventListener("click", openHint);
 byId("check").addEventListener("click", checkBoard);
@@ -1666,7 +1830,8 @@ byId("notes").addEventListener("click", () => {
   render();
 });
 
-loadCase(cases.find(item => item.id === saved.active) || cases[0]);
+const requestedCase = new URLSearchParams(location.search).get("dossier");
+loadCase(cases.find(item => item.id === requestedCase) || cases.find(item => item.id === saved.active) || cases[0]);
 </script>
 </body>
 </html>
